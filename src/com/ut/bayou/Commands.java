@@ -18,7 +18,7 @@ public enum Commands {
     String help(){
         String help = "";
         for(Commands c :Commands.values()){
-            help +=  "\n" + c.toString() + ": " +c.getDescription();
+            help +=  "\n-> " + c.toString() + ": " +c.getDescription();
         }
       return help;
     }
