@@ -24,7 +24,6 @@ public class Client {
         initializeClient();
     }
 
-
     public void initializeClient(){
         connect();
         Runnable listener = new Runnable()
@@ -61,7 +60,6 @@ public class Client {
                 {
                     logger.info("Message received "+line);
                     outstream.println("Ahoy from " + this);
-
                 }
                 logger.debug(this+" Exiting");
             }
@@ -75,7 +73,6 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
     }
 
     public String toString(){

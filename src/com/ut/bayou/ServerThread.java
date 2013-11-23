@@ -9,10 +9,12 @@ import java.net.Socket;
 
 public class ServerThread extends Thread{
     private Socket sock;
+    private Server pServer;
     private static Logger logger = Logger.getLogger("Server");
 
-    public ServerThread(Socket sock){
+    public ServerThread(Server server, Socket sock){
         this.sock = sock;
+        this.pServer = server;
         start();
     }
 
