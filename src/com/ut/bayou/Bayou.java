@@ -8,8 +8,6 @@ import java.util.Scanner;
 
 public class Bayou {
 
-
-
     private static Logger logger = Logger.getLogger("Bayou");
     private static Scanner scanner;
     private static int nextPort;
@@ -39,29 +37,31 @@ public class Bayou {
                         c = Commands.INVALID;
                 }
 
-                switch (c){
-                    case PING:
-                        logger.info("PONG");
-                        break;
-                    case START:
-                        if(s[1].toUpperCase().equals(Constants.CLIENT))
-                            startClient(Integer.parseInt(s[2]), Integer.parseInt(s[3]));
-                        else if(s[1].toUpperCase().equals(Constants.SERVER))
-                            startServer(Integer.parseInt(s[2]));
-                        break;
-                    case EXIT:
-                        logger.info("Exiting Bayou");
-                        System.exit(0);
-                        break;
-                    case INVALID:
-                        logger.error("Invalid Command");
-                        break;
-                    case HELP:
-                        logger.info(c.help());
-                        break;
-                    default:
-                        logger.error("Unknown Command");
-                        break;
+                try{
+                    switch (c){
+                        case PING:
+                            logger.info("PONG");
+                            break;
+                        case START:
+                            if(s[1].toUpperCase().equals(Constants.CLIENT))
+                                startClient(Integer.parseInt(s[2]), Integer.parseInt(s[3]));
+                            else if(s[1].toUpperCase().equals(Constants.SERVER))
+                                startServer(Integer.parseInt(s[2]));
+                            break;
+                        case EXIT:
+                            logger.info("Exiting Bayou");
+                            System.exit(0);
+                            break;
+                        case HELP:
+                            logger.info(c.help());
+                            break;
+                        case INVALID:
+                        default:
+                            logger.error("Unknown Command");
+                            break;
+                    }
+                }catch (Exception e){
+                    logger.error("Invalid Command");
                 }
             }
         }

@@ -1,0 +1,10 @@
+Entities
+--------
+Server -> equivalent to replica
+Client
+
+Multiple clients can connect to a server.
+Server can connect to a server.
+
+Server thread for each connection at each server.
+Each Server itself is a thread.
