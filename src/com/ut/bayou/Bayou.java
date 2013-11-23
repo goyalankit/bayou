@@ -13,7 +13,7 @@ public class Bayou {
     private static Scanner scanner;
 
     public static void main(String[] args){
-        Replica r = new Replica();
+        Server server = new Server(1, 1561);
         logger.info("$ Type help to get list of commands");
         scanner = new Scanner(System.in);
         init();
@@ -39,7 +39,7 @@ public class Bayou {
                         logger.info("PONG");
                         break;
                     case START:
-                        logger.info("Starting Bayou");
+                        Client client = new Client(1, 1561);
                         break;
                     case EXIT:
                         logger.info("Exiting Bayou");
