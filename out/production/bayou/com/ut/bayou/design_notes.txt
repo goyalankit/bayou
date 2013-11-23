@@ -1,3 +1,17 @@
+Commands to be implemented
+--------------------------
+1. pause
+2. continue
+3. printLog prints logs for all nodes
+4. printLog(i)
+5. isolate(i) node i partitioned from other nodes
+6. reconnect(i) Node is connected to all nodes. It is used when we try to recover the connections after we call partition(i)
+7. breakConnection(i,j) Break the connection between Node i and Node j
+8. recoverConnection(i,j) Recover the connection between Node i and Node j
+9. join(i) Node i joins the system
+10.leave(i) Node i leaves(retires from) the system.
+
+
 Entities
 --------
 Server -> equivalent to replica

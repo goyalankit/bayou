@@ -82,7 +82,6 @@ public class Server{
                 server.shutdown();
             }
         }));
-
         logger.debug(this+"Shutdown hooks attached");
     }
 
@@ -92,11 +91,7 @@ public class Server{
             logger.info("Shutting down server " + this);
             rcvSock.close();
         }
-        catch(SocketException e)
-        {
-            e.printStackTrace();
-        }
-        catch(IOException e)
+        catch(Exception e)
         {
             e.printStackTrace();
         }

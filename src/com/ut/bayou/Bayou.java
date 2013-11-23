@@ -2,7 +2,9 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
+import java.io.*;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Scanner;
 
 
@@ -14,17 +16,68 @@ public class Bayou {
     private static HashMap<Integer, Client> clients = new HashMap<Integer, Client>();
     private static HashMap<Integer, Server> servers = new HashMap<Integer, Server>();
     private static HashMap<Integer, Integer> serverport = new HashMap<Integer, Integer>();
+    private static boolean runScript = false;
+    private static String scriptName;
+    private static long delayInterval;
+
 
     public static void main(String[] args){
         nextPort = 1561;
+        delayInterval = 0;
         logger.info("$ Type help to get list of commands");
-        scanner = new Scanner(System.in);
+        initializeRun(); //Method to set all the configurations for a particular run.
+        if(runScript)
+            try {
+                scanner = new Scanner(new File("src/scripts/"+scriptName));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        else
+            scanner = new Scanner(System.in);
+
+
         init();
+    }
+
+    public static void initializeRun(){
+        //Properties prop = new Properties();
+        Properties prop = null;
+        try {
+            Properties defaultProps = new Properties();
+            logger.info("$ Loading properties from default.properties");
+            FileInputStream in = new FileInputStream("src/default.properties");
+            defaultProps.load(in);
+            in.close();
+
+            prop  = new Properties(defaultProps);
+
+            logger.info(" -> Overriding properties from bayou.properties");
+            in = new FileInputStream("src/bayou.properties");
+            prop.load(in);
+            in.close();
+
+            logger.debug(prop.getProperty("scriptName"));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        runScript = Boolean.parseBoolean(prop.getProperty("runScript"));
+        scriptName = prop.getProperty("scriptName");
+        delayInterval = Long.parseLong(prop.getProperty("delayInterval"));
+
     }
 
     public static void init(){
         while (true){
             if(scanner.hasNext()){
+
+                try {
+                    Thread.sleep(delayInterval); //delay the execution
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 String input = scanner.nextLine();
                 Commands c = null;
                 String[] s = input.split(" ");
@@ -36,7 +89,6 @@ public class Bayou {
                     else
                         c = Commands.INVALID;
                 }
-
                 executeCommand(c, s);
             }
         }
@@ -51,8 +103,9 @@ public class Bayou {
                 case START:
                     if (s[1].toUpperCase().equals(Constants.CLIENT))
                         startClient(Integer.parseInt(s[2]), Integer.parseInt(s[3]));
-                    else if (s[1].toUpperCase().equals(Constants.SERVER))
-                        startServer(Integer.parseInt(s[2]));
+                    break;
+                case JOIN:
+                    startServer(Integer.parseInt(s[1]));
                     break;
                 case EXIT:
                     logger.info("Exiting Bayou");
