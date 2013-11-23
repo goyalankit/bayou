@@ -26,7 +26,6 @@ public class Server{
         initializeServer();
     }
 
-
     public void initializeServer(){
 
         try {
@@ -44,7 +43,7 @@ public class Server{
             }
         };
         Thread thread = new Thread(listener);
-        thread.start(); //send back the control to main.
+        thread.start(); //give control to main thread.
     }
 
     public void startListening(){
@@ -69,8 +68,6 @@ public class Server{
             }
         }
     }
-
-
 
     public String toString(){
         return "Server "+serverId+" at "+port+" : ";

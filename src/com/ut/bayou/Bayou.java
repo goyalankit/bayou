@@ -37,33 +37,37 @@ public class Bayou {
                         c = Commands.INVALID;
                 }
 
-                try{
-                    switch (c){
-                        case PING:
-                            logger.info("PONG");
-                            break;
-                        case START:
-                            if(s[1].toUpperCase().equals(Constants.CLIENT))
-                                startClient(Integer.parseInt(s[2]), Integer.parseInt(s[3]));
-                            else if(s[1].toUpperCase().equals(Constants.SERVER))
-                                startServer(Integer.parseInt(s[2]));
-                            break;
-                        case EXIT:
-                            logger.info("Exiting Bayou");
-                            System.exit(0);
-                            break;
-                        case HELP:
-                            logger.info(c.help());
-                            break;
-                        case INVALID:
-                        default:
-                            logger.error("Unknown Command");
-                            break;
-                    }
-                }catch (Exception e){
-                    logger.error("Invalid Command");
-                }
+                executeCommand(c, s);
             }
+        }
+    }
+
+    private static void executeCommand(Commands c, String[] s) {
+        try {
+            switch (c) {
+                case PING:
+                    logger.info("PONG");
+                    break;
+                case START:
+                    if (s[1].toUpperCase().equals(Constants.CLIENT))
+                        startClient(Integer.parseInt(s[2]), Integer.parseInt(s[3]));
+                    else if (s[1].toUpperCase().equals(Constants.SERVER))
+                        startServer(Integer.parseInt(s[2]));
+                    break;
+                case EXIT:
+                    logger.info("Exiting Bayou");
+                    System.exit(0);
+                    break;
+                case HELP:
+                    logger.info(c.help());
+                    break;
+                case INVALID:
+                default:
+                    logger.error("Unknown Command");
+                    break;
+            }
+        } catch (Exception e) {
+            logger.error("Invalid Command");
         }
     }
 
@@ -86,10 +90,8 @@ public class Bayou {
             servers.put(svrNum, server);
 
         }else{
-            logger.error("Server number "+ svrNum + " already running");
+            logger.error("Server number " + svrNum + " already running");
         }
-
-
     }
 }
 
