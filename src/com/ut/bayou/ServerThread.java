@@ -2,8 +2,9 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class ServerThread extends Thread{
@@ -19,14 +20,14 @@ public class ServerThread extends Thread{
 
     public void run(){
         try {
-            ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             Object line;
-            while((line = in.readObject()) != null){
+            while((line = in.readLine()) != null){
                 logger.debug(this+ " Message received");
                 deliver(line);
             }
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
     }

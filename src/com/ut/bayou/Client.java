@@ -2,7 +2,10 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -10,8 +13,8 @@ public class Client {
     private int clientId;
     private int port;
     private Socket sock;
-    private ObjectOutputStream outstream;
-    private ObjectInputStream instream;
+    private PrintWriter outstream;
+    private BufferedReader instream;
     private static Logger logger = Logger.getLogger("Client");
     private Playlist localPlaylist;
 
@@ -39,8 +42,8 @@ public class Client {
     public void connect(){
         try {
             sock = new Socket("localhost", port);
-            outstream = new ObjectOutputStream(sock.getOutputStream());
-            instream = new ObjectInputStream(sock.getInputStream());
+            outstream = new PrintWriter(sock.getOutputStream(), true);
+            instream = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -54,11 +57,11 @@ public class Client {
             try
             {
                 logger.debug(this+" listening for messages");
-                Object line;
-                while((line = instream.readObject()) != null)
+                String line;
+                while((line = instream.readLine()) != null)
                 {
                     logger.info("Message received "+line);
-                    outstream.writeObject(new String("Ahoy from " + this));
+                    outstream.println("Ahoy from " + this);
                 }
                 logger.debug(this+" Exiting");
             }
@@ -67,7 +70,7 @@ public class Client {
                 logger.error("Socket Exception at "+this+ " Exiting...");
                 System.exit(0);
             }
-            catch(Exception e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -87,28 +90,16 @@ public class Client {
 
     public void addPlaylist(String song, String url){
         localPlaylist.add(song, url);
-        try {
-            outstream.writeObject(new UserAction(this.clientId, Constants.ADD, song, url));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        outstream.println(new UserAction(this.clientId, Constants.ADD, song, url));
     }
     public void editPlaylist(String song, String url){
         localPlaylist.edit(song, url);
-        try {
-            outstream.writeObject(new UserAction(this.clientId, Constants.EDIT, song, url));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        outstream.println(new UserAction(this.clientId, Constants.EDIT, song, url));
     }
 
     public void deleteFromPlaylist(String song) {
         localPlaylist.delete(song);
-        try {
-            outstream.writeObject(new UserAction(this.clientId, Constants.DELETE, song, null));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        outstream.println(new UserAction(this.clientId, Constants.DELETE, song, null));
     }
 
     public void printPlaylist(){
