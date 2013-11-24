@@ -107,6 +107,15 @@ public class Bayou {
                 case JOIN:
                     startServer(Integer.parseInt(s[1]));
                     break;
+                case RECONNECT:
+                    reconnectServer(Integer.parseInt(s[1]));
+                    break;
+                case PLAYLIST:
+                    clients.get(Integer.parseInt(s[1])).executeUserCommand(s);
+                    break;
+                case PRINTLOG:
+                    servers.get(Integer.parseInt(s[1])).printPlaylist();
+                    break;
                 case EXIT:
                     logger.info("Exiting Bayou");
                     System.exit(0);
@@ -120,8 +129,13 @@ public class Bayou {
                     break;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error("Invalid Command");
         }
+    }
+
+    public static void reconnectServer(int svrNum){
+
     }
 
     public static void startClient(int clNum, int svrNum){

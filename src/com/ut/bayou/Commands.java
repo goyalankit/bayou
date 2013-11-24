@@ -14,7 +14,9 @@ public enum Commands {
     RECOVERCONNECTION("<i,j> Recover the connection between Node i and Node j"),
     LEAVE("<i> Node i leaves(retires from) the system."),
     PAUSE("pause the script"),
-    CONTINUE("continue the script");
+    CONTINUE("continue the script"),
+    PLAYLIST("<add|update|delete|read> <CLIENT_NO> the song"),
+    PRINTLOG("<i|> print log for node i or all the nodes if left blank.");
 
     private String description;
 

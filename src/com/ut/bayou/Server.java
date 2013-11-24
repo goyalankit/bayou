@@ -11,17 +11,21 @@ import java.util.HashMap;
 
 public class Server{
     private int serverId;
-    private int port;                                               //My Port Id
-    private ServerSocket rcvSock;                                   //Server Socket to receive connections
+    private int port;                         //My Port Id
+    private ServerSocket rcvSock;             //Server Socket to receive connections
+    private Playlist playlist;                //local server playlist. updated by all threads. needs to be synchronized.
 
-    private HashMap<Integer, Socket> socks;
-    private HashMap<Socket, PrintWriter> ostreams;
+    private HashMap<Integer, Socket> idSockets; //server -> socket
+    private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream
 
     private static Logger logger;
 
     public Server(int serverId, int port) {
         this.serverId = serverId;
         this.port = port;
+        this.playlist = new Playlist();
+        this.outstreams = new HashMap<Socket, PrintWriter>();
+        this.idSockets = new HashMap<Integer, Socket>();
         logger = Logger.getLogger("Server");
         initializeServer();
     }
@@ -56,11 +60,13 @@ public class Server{
                 PrintWriter pout= new PrintWriter(socket.getOutputStream(), true);
                 pout.println("Ahoy! from "+this);
                 logger.debug("Sent the message. Will listen now.");
-
+                outstreams.put(socket, pout);
+                idSockets.put(socket.getPort(), socket);
                 //Start a Server thread for this client So that more clients can connect.
                 new ServerThread(this, socket);
 
             }catch (SocketException e){
+                e.printStackTrace();
                 System.exit(0); //Otherwise it will keep throwing the error.
             }catch (Exception e){
                 e.printStackTrace();
@@ -68,6 +74,26 @@ public class Server{
             }
         }
     }
+
+
+
+    //playlist related methods
+    public void addPlaylist(String song, String url){
+        logger.debug("Adding to server playlist");
+        playlist.add(song, url);
+    }
+    public void editPlaylist(String song, String url){
+        playlist.edit(song, url);
+    }
+
+    public void deleteFromPlaylist(String song) {
+        playlist.delete(song);
+    }
+
+    public void printPlaylist(){
+        playlist.printIt();
+    }
+
 
     public String toString(){
         return "Server "+serverId+" at "+port+" : ";

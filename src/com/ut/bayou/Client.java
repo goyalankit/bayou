@@ -16,10 +16,12 @@ public class Client {
     private PrintWriter outstream;
     private BufferedReader instream;
     private static Logger logger = Logger.getLogger("Client");
+    private Playlist localPlaylist;
 
     public Client(int clientId, int port){
         this.clientId = clientId;
         this.port = port;
+        this.localPlaylist = new Playlist();
 
         initializeClient();
     }
@@ -73,6 +75,35 @@ public class Client {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void executeUserCommand(String [] command){
+        if(Constants.ADD.equals(command[2].toUpperCase()))
+            addPlaylist(command[3], command[4]);
+        else if(Constants.EDIT.equals(command[2].toUpperCase()))
+            editPlaylist(command[3], command[4]);
+        else if(Constants.DELETE.equals(command[2].toUpperCase()))
+            deleteFromPlaylist(command[3]);
+        else
+            printPlaylist();
+    }
+
+    public void addPlaylist(String song, String url){
+        localPlaylist.add(song, url);
+        outstream.println(new UserAction(this.clientId, Constants.ADD, song, url));
+    }
+    public void editPlaylist(String song, String url){
+        localPlaylist.edit(song, url);
+        outstream.println(new UserAction(this.clientId, Constants.EDIT, song, url));
+    }
+
+    public void deleteFromPlaylist(String song) {
+        localPlaylist.delete(song);
+        outstream.println(new UserAction(this.clientId, Constants.DELETE, song, null));
+    }
+
+    public void printPlaylist(){
+        localPlaylist.printIt();
     }
 
     public String toString(){
