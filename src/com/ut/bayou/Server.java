@@ -3,7 +3,7 @@ package com.ut.bayou;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -16,7 +16,7 @@ public class Server{
     private Playlist playlist;                //local server playlist. updated by all threads. needs to be synchronized.
 
     private HashMap<Integer, Socket> idSockets; //server -> socket
-    private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream
+    private HashMap<Socket, ObjectOutputStream> outstreams;  //socket -> output stream
 
     private static Logger logger;
 
@@ -24,7 +24,7 @@ public class Server{
         this.serverId = serverId;
         this.port = port;
         this.playlist = new Playlist();
-        this.outstreams = new HashMap<Socket, PrintWriter>();
+        this.outstreams = new HashMap<Socket, ObjectOutputStream>();
         this.idSockets = new HashMap<Integer, Socket>();
         logger = Logger.getLogger("Server");
         initializeServer();
@@ -57,10 +57,10 @@ public class Server{
                 logger.info(this+" listening for messages.");
                 socket = rcvSock.accept();
                 logger.info(this+" connection accepted.");
-                PrintWriter pout= new PrintWriter(socket.getOutputStream(), true);
-                pout.println("Ahoy! from "+this);
+                ObjectOutputStream obout= new ObjectOutputStream(socket.getOutputStream());
+                obout.writeObject(new String("Ahoy! from "+this));
                 logger.debug("Sent the message. Will listen now.");
-                outstreams.put(socket, pout);
+                outstreams.put(socket, obout);
                 idSockets.put(socket.getPort(), socket);
                 //Start a Server thread for this client So that more clients can connect.
                 new ServerThread(this, socket);

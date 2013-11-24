@@ -1,6 +1,8 @@
 package com.ut.bayou;
 
-public class Message {
+import java.io.Serializable;
+
+public class Message implements Serializable{
     int srcId;
 }
 
