@@ -1,3 +1,9 @@
 join 0
+join 1
 start client 0 0
 playlist 0 ADD hum hum.url
+playlist 0 ADD hum2 hum.url
+playlist 0 ADD hum3 hum.url
+playlist 0 ADD hum4 hum.url
+playlist 0 read
+printLog 0

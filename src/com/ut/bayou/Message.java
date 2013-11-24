@@ -3,11 +3,11 @@ package com.ut.bayou;
 import java.io.Serializable;
 
 public class Message implements Serializable{
-    int srcId;
+    Integer srcId;
 }
 
 class BeginEntropyMessage extends Message{
-    BeginEntropyMessage(int srcId) {
+    BeginEntropyMessage(Integer srcId) {
         this.srcId = srcId;
     }
 }
@@ -27,5 +27,11 @@ class UserAction extends Message{
         this.action = action;
         this.song = song;
         this.url = url;
+    }
+}
+
+class ConnectionAcceptAck extends Message{
+    ConnectionAcceptAck(Integer sId) {
+        this.srcId = sId;
     }
 }

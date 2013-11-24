@@ -22,7 +22,7 @@ public class Bayou {
 
 
     public static void main(String[] args){
-        nextPort = 1561;
+        nextPort = 1554;
         delayInterval = 0;
         logger.info("$ Type help to get list of commands");
         initializeRun(); //Method to set all the configurations for a particular run.
