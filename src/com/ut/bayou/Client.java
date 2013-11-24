@@ -39,8 +39,8 @@ public class Client {
     public void connect(){
         try {
             sock = new Socket("localhost", port);
-            outstream = new ObjectOutputStream(new BufferedOutputStream(sock.getOutputStream()));
-            instream = new ObjectInputStream(new BufferedInputStream(sock.getInputStream()));
+            outstream = new ObjectOutputStream(sock.getOutputStream());
+            instream = new ObjectInputStream(sock.getInputStream());
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -57,15 +57,13 @@ public class Client {
                 Object line;
                 while((line = instream.readObject()) != null)
                 {
-                    deliver(line);
+                    logger.info("Message received "+line);
                     outstream.writeObject(new String("Ahoy from " + this));
-                    outstream.flush();
                 }
                 logger.debug(this+" Exiting");
             }
             catch(SocketException e)
             {
-                e.printStackTrace();
                 logger.error("Socket Exception at "+this+ " Exiting...");
                 System.exit(0);
             }
@@ -75,12 +73,6 @@ public class Client {
             }
         }
     }
-
-    public void deliver(Object obj){
-        if(obj instanceof ConnectionAcceptAck)
-            logger.debug(this+" $ connection successful with "+ ((ConnectionAcceptAck) obj).srcId);
-    }
-
 
     public void executeUserCommand(String [] command){
         if(Constants.ADD.equals(command[2].toUpperCase()))
@@ -95,20 +87,16 @@ public class Client {
 
     public void addPlaylist(String song, String url){
         localPlaylist.add(song, url);
-        logger.info("** <"+song+", "+url +"> added to playlist**");
         try {
             outstream.writeObject(new UserAction(this.clientId, Constants.ADD, song, url));
-            outstream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     public void editPlaylist(String song, String url){
         localPlaylist.edit(song, url);
-        logger.info("** <"+song+", "+url +"> edited to playlist**");
         try {
             outstream.writeObject(new UserAction(this.clientId, Constants.EDIT, song, url));
-            outstream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -116,10 +104,8 @@ public class Client {
 
     public void deleteFromPlaylist(String song) {
         localPlaylist.delete(song);
-        logger.info("** <"+song+"> deleted from playlist**");
         try {
             outstream.writeObject(new UserAction(this.clientId, Constants.DELETE, song, null));
-            outstream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

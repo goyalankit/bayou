@@ -2,7 +2,7 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
@@ -19,10 +19,10 @@ public class ServerThread extends Thread{
 
     public void run(){
         try {
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(sock.getInputStream()));
+            ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
             Object line;
             while((line = in.readObject()) != null){
-                logger.debug(this+ " message received");
+                logger.debug(this+ " Message received");
                 deliver(line);
             }
         }
@@ -33,7 +33,7 @@ public class ServerThread extends Thread{
 
     public void deliver(Object msg){
         if(msg instanceof UserAction){
-            logger.debug(this+ " user action received from client "+((UserAction) msg).srcId);
+            logger.debug(this+ " USER ACTION RECEIVED");
             performPlaylistAction((UserAction) msg);
         }else{
 
@@ -43,7 +43,7 @@ public class ServerThread extends Thread{
     private void performPlaylistAction(UserAction msg) {
         UserAction ua = (UserAction) msg;
         if(Constants.ADD.equals(ua.action)){
-            logger.debug(this+ " adding to playlist");
+            logger.debug(this+ " ADDING TO PLAYLIST");
             pServer.addPlaylist(ua.song, ua.url);}
         else if(Constants.EDIT.equals(ua.action))
             pServer.editPlaylist(ua.song, ua.url);
@@ -52,9 +52,4 @@ public class ServerThread extends Thread{
         else
             logger.error("unknown action");
     }
-
-    public String toString(){
-        return "Server thread at "+ pServer;
-    }
-
 }

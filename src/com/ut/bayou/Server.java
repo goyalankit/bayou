@@ -2,7 +2,6 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -57,18 +56,12 @@ public class Server{
             try {
                 logger.info(this+" listening for messages.");
                 socket = rcvSock.accept();
-
-                logger.info(this+" connection accepted from "+socket.getPort());
-                ObjectOutputStream obout = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-
-                obout.writeObject(new ConnectionAcceptAck(this.serverId));
-                obout.flush();
-
+                logger.info(this+" connection accepted.");
+                ObjectOutputStream obout= new ObjectOutputStream(socket.getOutputStream());
+                obout.writeObject(new String("Ahoy! from "+this));
                 logger.debug("Sent the message. Will listen now.");
-
                 outstreams.put(socket, obout);
                 idSockets.put(socket.getPort(), socket);
-
                 //Start a Server thread for this client So that more clients can connect.
                 new ServerThread(this, socket);
 
