@@ -1,3 +1,6 @@
 join 0
 start client 0 0
 playlist 0 ADD hum hum.url
+playlist 0 ADD hum hum.url
+playlist 0 ADD hum hum.url
+playlist 0 ADD hum hum.url

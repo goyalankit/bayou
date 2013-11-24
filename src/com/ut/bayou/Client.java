@@ -90,16 +90,16 @@ public class Client {
 
     public void addPlaylist(String song, String url){
         localPlaylist.add(song, url);
-        outstream.println(new UserAction(this.clientId, Constants.ADD, song, url));
+        outstream.println((new UserAction(this.clientId, Constants.ADD, song, url)).stringify());
     }
     public void editPlaylist(String song, String url){
         localPlaylist.edit(song, url);
-        outstream.println(new UserAction(this.clientId, Constants.EDIT, song, url));
+        outstream.println(new UserAction(this.clientId, Constants.EDIT, song, url).stringify());
     }
 
     public void deleteFromPlaylist(String song) {
         localPlaylist.delete(song);
-        outstream.println(new UserAction(this.clientId, Constants.DELETE, song, null));
+        outstream.println(new UserAction(this.clientId, Constants.DELETE, song, null).stringify());
     }
 
     public void printPlaylist(){

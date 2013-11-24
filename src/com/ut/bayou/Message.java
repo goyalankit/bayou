@@ -1,7 +1,15 @@
 package com.ut.bayou;
 
+import org.apache.log4j.Logger;
+
+import java.util.Scanner;
+
 public class Message {
     int srcId;
+    static Logger logger = Logger.getLogger("Message");
+    public String toString(){
+        return "srcId="+srcId;
+    }
 }
 
 class BeginEntropyMessage extends Message{
@@ -26,4 +34,32 @@ class UserAction extends Message{
         this.song = song;
         this.url = url;
     }
+
+    public String stringify(){
+        String s = "";
+        s = "UserAction"+Constants.Delimiter +
+                srcId +Constants.SubDelimiter+
+                action +Constants.SubDelimiter+
+                song +Constants.SubDelimiter+url;
+
+        return s;
+    }
+
+    public static UserAction unStringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        UserAction ua = new UserAction(-1, null, null, null);
+        if(!topLevel[0].equals(Constants.UserAction)){
+            throw new ClassCastException();
+        }
+        Scanner scanner = new Scanner(topLevel[1]);
+        ua.srcId = scanner.nextInt();
+        ua.action = scanner.next();
+        ua.song = scanner.next();
+        ua.url = scanner.next();
+
+        return ua;
+    }
+
+
+
 }
