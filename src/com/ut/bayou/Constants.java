@@ -9,5 +9,7 @@ public abstract class Constants {
     public static final String READ = "READ";
     public static final String UserAction = "UserAction";
     public static final String Delimiter = ":::";
-    public static final String SubDelimiter = " ";
+    public static final String SPACE= " ";
+    public static final String SubDelimiter = "::";
+
 }

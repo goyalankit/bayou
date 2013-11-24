@@ -18,6 +18,13 @@ public class Server{
     private HashMap<Integer, Socket> idSockets; //server -> socket
     private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream
 
+    private WriteLog tentativeWrites;
+    private WriteLog committedWrites;
+
+    private VersionVector versionVector;
+
+    private boolean isPrimary;
+
     private static Logger logger;
 
     public Server(int serverId, int port) {
@@ -26,6 +33,11 @@ public class Server{
         this.playlist = new Playlist();
         this.outstreams = new HashMap<Socket, PrintWriter>();
         this.idSockets = new HashMap<Integer, Socket>();
+        this.tentativeWrites = new WriteLog();
+        this.committedWrites = new WriteLog();
+        this.isPrimary = false;
+        this.versionVector = new VersionVector();
+        versionVector.addNewServerEntry(serverId, 0); //add your own entry to vector first.
         logger = Logger.getLogger("Server");
         initializeServer();
     }
@@ -66,34 +78,72 @@ public class Server{
                 new ServerThread(this, socket);
 
             }catch (SocketException e){
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.exit(0); //Otherwise it will keep throwing the error.
             }catch (Exception e){
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.exit(0); //Otherwise it will keep throwing the error.
             }
         }
     }
 
 
-
     //playlist related methods
     public void addPlaylist(String song, String url){
-        logger.debug("Adding to server playlist");
+        String action = Constants.ADD;
+        acceptWrite(song, url, action);
+        logger.debug("Adding to playlist");
         playlist.add(song, url);
     }
+
+
     public void editPlaylist(String song, String url){
+        String action = Constants.EDIT;
+        acceptWrite(song, url, action);
+        logger.debug("Editing playlist");
         playlist.edit(song, url);
+
     }
 
     public void deleteFromPlaylist(String song) {
+        String action = Constants.DELETE;
+        acceptWrite(song, null, action);
+        logger.debug("Deleting from playlist");
         playlist.delete(song);
+    }
+
+    private void acceptWrite(String song, String url, String action) {
+        long acceptStamp = System.currentTimeMillis();
+
+        if(isPrimary){
+            Write w = new Write(acceptStamp, -1, serverId, true, action , song, url);
+            committedWrites.addToLog(w);
+        }else{
+            Write w = new Write(acceptStamp, -1, serverId, false, action , song, url);
+            tentativeWrites.addToLog(w);
+        }
+        versionVector.updateMyAcceptStamp(serverId, acceptStamp);
+    }
+
+
+    public void printLog(){
+        String logstring = "";
+        logstring = this + "$ logs\n"+
+                "---------------------------\n"+
+                "Tentative Writes number " + tentativeWrites.size()+
+                "\nCommited Writes number " + committedWrites.size()+"\n"+
+                "Version Vector: "+versionVector.strigify();
+        ;
+        logger.info(logstring);
     }
 
     public void printPlaylist(){
         playlist.printIt();
     }
 
+    public void setPrimary(boolean primary) {
+        isPrimary = primary;
+    }
 
     public String toString(){
         return "Server "+serverId+" at "+port+" : ";

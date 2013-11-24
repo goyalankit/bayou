@@ -1,6 +1,6 @@
 package com.ut.bayou;
 
-public class Write {
+public class Write implements Comparable{
     private long acceptStamp;
     private long csn;
     private int sId;
@@ -20,4 +20,18 @@ public class Write {
         this.url = url;
     }
 
+
+    @Override
+    public int compareTo(Object second)
+    {
+        Write secondWrite = (Write)second;
+        if(secondWrite.committed && secondWrite.committed)
+            return (int) (this.csn - secondWrite.csn);
+        if(secondWrite.committed && !this.committed)
+            return 1;
+        if(!secondWrite.committed && this.committed)
+            return -1;
+        int diff = (int)(this.acceptStamp - ((Write)second).acceptStamp);
+        return diff != 0 ? diff : sId - ((Write)second).sId;
+    }
 }

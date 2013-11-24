@@ -19,6 +19,7 @@ public class Bayou {
     private static boolean runScript = false;
     private static String scriptName;
     private static long delayInterval;
+    private static int primaryServer = -1;
 
 
     public static void main(String[] args){
@@ -114,7 +115,11 @@ public class Bayou {
                     clients.get(Integer.parseInt(s[1])).executeUserCommand(s);
                     break;
                 case PRINTLOG:
-                    servers.get(Integer.parseInt(s[1])).printPlaylist();
+                    if(s.length > 1)
+                        servers.get(Integer.parseInt(s[1])).printLog();
+                    else
+                        for(Server server: servers.values())
+                            server.printLog();
                     break;
                 case EXIT:
                     logger.info("Exiting Bayou");
@@ -154,6 +159,10 @@ public class Bayou {
         if(!servers.containsKey(svrNum)){
             serverport.put(svrNum, nextPort++);
             server = new Server(svrNum, serverport.get(svrNum));
+            if(primaryServer == -1){
+                server.setPrimary(true);
+                primaryServer = svrNum;
+            }
             servers.put(svrNum, server);
 
         }else{

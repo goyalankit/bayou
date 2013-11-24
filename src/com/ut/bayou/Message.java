@@ -38,9 +38,9 @@ class UserAction extends Message{
     public String stringify(){
         String s = "";
         s = "UserAction"+Constants.Delimiter +
-                srcId +Constants.SubDelimiter+
-                action +Constants.SubDelimiter+
-                song +Constants.SubDelimiter+url;
+                srcId +Constants.SPACE+
+                action +Constants.SPACE+
+                song +Constants.SPACE+url;
 
         return s;
     }
@@ -59,7 +59,4 @@ class UserAction extends Message{
 
         return ua;
     }
-
-
-
 }
