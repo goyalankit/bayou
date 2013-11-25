@@ -97,6 +97,10 @@ public class Bayou {
 
     private static void executeCommand(Commands c, String[] s) {
         try {
+
+            if(runScript)
+                System.out.println("COMMAND: "+c);
+
             switch (c) {
                 case PING:
                     logger.info("PONG");

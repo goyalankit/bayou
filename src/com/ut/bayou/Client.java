@@ -16,7 +16,7 @@ public class Client {
     private PrintWriter outstream;
     private BufferedReader instream;
     private static Logger logger = Logger.getLogger("Client");
-    private Playlist localPlaylist;
+    private Playlist localPlaylist; //to ensure read your write property. How to make sure that it is updated?
 
     public Client(int clientId, int port){
         this.clientId = clientId;
@@ -24,7 +24,6 @@ public class Client {
         this.localPlaylist = new Playlist();
         connect();
     }
-
 
     public void connect(){
         try {
@@ -72,4 +71,3 @@ public class Client {
         return "Client "+clientId+" connected to "+port+" ";
     }
 }
-

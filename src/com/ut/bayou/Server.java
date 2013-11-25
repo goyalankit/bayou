@@ -152,8 +152,8 @@ public class Server{
             sendSock = new Socket();
             try {
                 sendSock.connect(new InetSocketAddress(InetAddress.getLocalHost(), svrPort));
-                PrintWriter pout = new PrintWriter(sendSock.getOutputStream());
-                pout.println((new ServerConnectAck(serverId).stringify()));
+                PrintWriter pout = new PrintWriter(sendSock.getOutputStream(), true);
+                pout.println((new ServerConnectAck(serverId)).stringify());
                 serverSockets.put(svrNum, sendSock);
                 outstreams.put(sendSock, pout);
             } catch (IOException e) {
