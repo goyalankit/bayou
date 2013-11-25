@@ -49,7 +49,6 @@ public class Server{
 
         try {
             this.rcvSock = new ServerSocket(port);
-            addShutdownHooks(this); //ensures that the ports are released.
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,7 +100,7 @@ public class Server{
     }
 
     //playlist related methods
-    public void addPlaylist(String song, String url){
+    public synchronized void addPlaylist(String song, String url){
         String action = Constants.ADD;
         acceptWrite(song, url, action);
         logger.debug("Adding to playlist");
@@ -109,7 +108,7 @@ public class Server{
     }
 
 
-    public void editPlaylist(String song, String url){
+    public synchronized void editPlaylist(String song, String url){
         String action = Constants.EDIT;
         acceptWrite(song, url, action);
         logger.debug("Editing playlist");
@@ -117,7 +116,7 @@ public class Server{
 
     }
 
-    public void deleteFromPlaylist(String song) {
+    public synchronized void deleteFromPlaylist(String song) {
         String action = Constants.DELETE;
         acceptWrite(song, null, action);
         logger.debug("Deleting from playlist");
@@ -169,30 +168,6 @@ public class Server{
 
     public String toString(){
         return "Server "+serverId+" at "+port+" : ";
-    }
-
-    //To allow the graceful closing of socket connections.
-    private void addShutdownHooks(final Server server){
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
-        {
-            public void run()
-            {
-                server.shutdown();
-            }
-        }));
-        logger.debug(this+"Shutdown hooks attached");
-    }
-
-    private void shutdown(){
-        try
-        {
-            logger.info("Shutting down server " + this);
-            rcvSock.close();
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 }
 
