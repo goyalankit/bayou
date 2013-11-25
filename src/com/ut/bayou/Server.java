@@ -11,12 +11,12 @@ public class Server{
     private int serverId;
     private int port;                         //My Port Id
     private ServerSocket rcvSock;             //Server Socket to receive connections
-    private Socket sendSock;             //Server Socket to receive connections
+    private Socket sendSock;                  //Socket to connect to other servers
     private Playlist playlist;                //local server playlist. updated by all threads. needs to be synchronized.
 
-    private HashMap<Integer, Socket> clientSockets; //server -> socket
-    private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream
-    private HashMap<Integer, Socket> serverSockets; //server -> socket
+    private HashMap<Integer, Socket> clientSockets; //client port -> socket
+    private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream; all the outstreams. both server and client.
+    private HashMap<Integer, Socket> serverSockets; //server number -> socket
 
     private WriteLog tentativeWrites;
     private WriteLog committedWrites;
@@ -145,7 +145,6 @@ public class Server{
                 "Tentative Writes number " + tentativeWrites.size()+
                 "\nCommited Writes number " + committedWrites.size()+"\n"+
                 "Version Vector: "+versionVector.strigify();
-        ;
         logger.info(logstring);
     }
 
