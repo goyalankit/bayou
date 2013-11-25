@@ -20,6 +20,12 @@ public class WriteLog {
         return writes.iterator();
     }
 
+    public String toString(){
+        String s = "";
+
+        return "";
+    }
+
     public int size(){
         return writes.size();
     }

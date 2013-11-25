@@ -23,7 +23,7 @@ public class ServerThread extends Thread{
             BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             String line;
             while((line = in.readLine()) != null){
-                logger.debug(this+ " Message received");
+                logger.debug(line+ " Message received");
                 deliver(line);
             }
         }
@@ -37,8 +37,13 @@ public class ServerThread extends Thread{
             UserAction ua = UserAction.unStringify(msg);
             logger.debug(this+ " USER ACTION RECEIVED");
             performPlaylistAction(ua);
-        }else{
-
+        }else if(msg.startsWith(Constants.ClientConnectAck)){
+            logger.debug(this+ " Client ACK RECEIVED");
+            ClientConnectAck cca = ClientConnectAck.unStringify(msg);
+            pServer.addClientSocket(sock.getPort(), sock);
+        }else if(msg.startsWith(Constants.ServerConnectAck)){
+            ServerConnectAck cca = ServerConnectAck.unStringify(msg);
+            pServer.addServerSocket(sock.getPort(), sock);
         }
     }
 

@@ -1,3 +1,7 @@
+REQUIREMENTS
+------------------------
+------------------------
+
 Commands to be implemented
 --------------------------
 1. pause
@@ -12,6 +16,8 @@ Commands to be implemented
 10.leave(i) Node i leaves(retires from) the system.
 
 
+
+
 Entities
 --------
 Server -> equivalent to replica
@@ -22,3 +28,8 @@ Server can connect to a server.
 
 Server thread for each connection at each server.
 Each Server itself is a thread.
+
+Client sends request to a server..a new server thread is launched. Client can now communicate to the server through this thread.
+
+Only one playlist maintained at each server. need to synchronize properly in case of multiple clients.
+

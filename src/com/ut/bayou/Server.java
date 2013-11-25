@@ -4,19 +4,19 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.HashMap;
 
 public class Server{
     private int serverId;
     private int port;                         //My Port Id
     private ServerSocket rcvSock;             //Server Socket to receive connections
+    private Socket sendSock;             //Server Socket to receive connections
     private Playlist playlist;                //local server playlist. updated by all threads. needs to be synchronized.
 
-    private HashMap<Integer, Socket> idSockets; //server -> socket
+    private HashMap<Integer, Socket> clientSockets; //server -> socket
     private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream
+    private HashMap<Integer, Socket> serverSockets; //server -> socket
 
     private WriteLog tentativeWrites;
     private WriteLog committedWrites;
@@ -33,7 +33,8 @@ public class Server{
         this.port = port;
         this.playlist = new Playlist();
         this.outstreams = new HashMap<Socket, PrintWriter>();
-        this.idSockets = new HashMap<Integer, Socket>();
+        this.clientSockets = new HashMap<Integer, Socket>();
+        this.serverSockets = new HashMap<Integer, Socket>();
         this.tentativeWrites = new WriteLog();
         this.committedWrites = new WriteLog();
         this.isPrimary = false;
@@ -70,12 +71,12 @@ public class Server{
             try {
                 logger.info(this+" listening for messages.");
                 socket = rcvSock.accept();
-                logger.info(this+" connection accepted.");
+                logger.info(this+" connection accepted at "+socket.getPort());
                 PrintWriter pout= new PrintWriter(socket.getOutputStream(), true);
-                pout.println("Ahoy! from "+this);
+                pout.println("Hello from "+this);
                 logger.debug("Sent the message. Will listen now.");
                 outstreams.put(socket, pout);
-                idSockets.put(socket.getPort(), socket);
+
                 //Start a Server thread for this client So that more clients can connect.
                 new ServerThread(this, socket);
 
@@ -89,6 +90,15 @@ public class Server{
         }
     }
 
+    public synchronized void addClientSocket(int port, Socket socket){
+        logger.debug("adding client socket");
+        clientSockets.put(port, socket);
+    }
+
+    public synchronized void addServerSocket(int sId, Socket socket){
+        logger.debug("adding server socket");
+        serverSockets.put(sId, socket);
+    }
 
     //playlist related methods
     public void addPlaylist(String song, String url){
@@ -139,8 +149,19 @@ public class Server{
         logger.info(logstring);
     }
 
-    public void printPlaylist(){
-        playlist.printIt();
+    public void connectToYou(int svrNum, int svrPort){
+        if(!(clientSockets.containsKey(svrNum) || clientSockets.containsKey(svrPort))){
+            sendSock = new Socket();
+            try {
+                sendSock.connect(new InetSocketAddress(InetAddress.getLocalHost(), svrPort));
+                PrintWriter pout = new PrintWriter(sendSock.getOutputStream());
+                pout.println((new ServerConnectAck(serverId).stringify()));
+                serverSockets.put(svrNum, sendSock);
+                outstreams.put(sendSock, pout);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void setPrimary(boolean primary) {

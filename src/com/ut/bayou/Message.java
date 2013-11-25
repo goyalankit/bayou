@@ -19,6 +19,43 @@ class BeginEntropyMessage extends Message{
 }
 
 
+class ServerConnectAck extends Message{
+    ServerConnectAck(int sId) {
+        this.srcId = sId;
+    }
+
+    public String stringify(){
+        return  "ServerConnectAck"+Constants.Delimiter+""+srcId;
+    }
+
+    public static ServerConnectAck unStringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        if(!topLevel[0].equals(Constants.ServerConnectAck)){
+            throw new ClassCastException();
+        }
+        return new ServerConnectAck(Integer.parseInt(topLevel[1]));
+    }
+}
+
+class ClientConnectAck extends Message{
+    ClientConnectAck(int sId) {
+        this.srcId = sId;
+    }
+
+    public String stringify(){
+        return  "ClientConnectAck"+Constants.Delimiter+""+srcId;
+    }
+
+    public static ClientConnectAck unStringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        if(!topLevel[0].equals(Constants.ClientConnectAck)){
+            throw new ClassCastException();
+        }
+        return new ClientConnectAck(Integer.parseInt(topLevel[1]));
+    }
+
+}
+
 class AckBeginEntropy extends Message{
 
 }

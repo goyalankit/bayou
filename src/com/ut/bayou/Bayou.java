@@ -140,7 +140,11 @@ public class Bayou {
     }
 
     public static void reconnectServer(int svrNum){
-
+        for(Integer sId : servers.keySet()){
+            if(sId != svrNum){
+                servers.get(sId).connectToYou(svrNum, serverport.get(svrNum));
+            }
+        }
     }
 
     public static void startClient(int clNum, int svrNum){
