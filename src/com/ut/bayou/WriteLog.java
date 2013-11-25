@@ -1,6 +1,7 @@
 package com.ut.bayou;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -13,6 +14,10 @@ public class WriteLog {
 
     public void addToLog(Write w){
         writes.add(w);
+    }
+
+    public Iterator<Write> iterator() {
+        return writes.iterator();
     }
 
     public int size(){

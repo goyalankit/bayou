@@ -24,6 +24,7 @@ public class Server{
     private VersionVector versionVector;
 
     private boolean isPrimary;
+    private int largestUnusedCsn;
 
     private static Logger logger;
 
@@ -37,6 +38,7 @@ public class Server{
         this.committedWrites = new WriteLog();
         this.isPrimary = false;
         this.versionVector = new VersionVector();
+        this.largestUnusedCsn = 0;
         versionVector.addNewServerEntry(serverId, 0); //add your own entry to vector first.
         logger = Logger.getLogger("Server");
         initializeServer();
@@ -116,7 +118,7 @@ public class Server{
         long acceptStamp = System.currentTimeMillis();
 
         if(isPrimary){
-            Write w = new Write(acceptStamp, -1, serverId, true, action , song, url);
+            Write w = new Write(acceptStamp, largestUnusedCsn++, serverId, true, action , song, url);
             committedWrites.addToLog(w);
         }else{
             Write w = new Write(acceptStamp, -1, serverId, false, action , song, url);

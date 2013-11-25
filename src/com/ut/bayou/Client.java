@@ -36,7 +36,7 @@ public class Client {
             }
         };
         Thread thread = new Thread(listener);
-        thread.start();
+        //thread.start();
     }
 
     public void connect(){
