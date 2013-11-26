@@ -3,7 +3,7 @@ package com.ut.bayou;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,7 +16,7 @@ public class Server{
     private Playlist playlist;                //local server playlist. updated by all threads. needs to be synchronized.
 
     private HashMap<Integer, Socket> clientSockets; //client port -> socket
-    private HashMap<Socket, PrintWriter> outstreams;  //socket -> output stream; all the outstreams. both server and client.
+    private HashMap<Socket, ObjectOutputStream> outstreams;  //socket -> output stream; all the outstreams. both server and client.
     private HashMap<Integer, Socket> serverSockets; //server number -> socket
 
     private WriteLog tentativeWrites;
@@ -36,7 +36,7 @@ public class Server{
         this.serverId = serverId;
         this.port = port;
         this.playlist = new Playlist();
-        this.outstreams = new HashMap<Socket, PrintWriter>();
+        this.outstreams = new HashMap<Socket, ObjectOutputStream>();
         this.clientSockets = new HashMap<Integer, Socket>();
         this.serverSockets = new HashMap<Integer, Socket>();
         this.tentativeWrites = new WriteLog();
@@ -77,8 +77,8 @@ public class Server{
                 logger.info(this+" listening for messages.");
                 socket = rcvSock.accept();
                 logger.info(this+" connection accepted at "+socket.getPort());
-                PrintWriter pout= new PrintWriter(socket.getOutputStream(), true);
-                pout.println("Hello from "+this);
+                ObjectOutputStream pout= new ObjectOutputStream(socket.getOutputStream());
+                pout.writeObject(new String("Hello from " + this));
                 logger.debug("Sent the message. Will listen now.");
                 outstreams.put(socket, pout);
 
@@ -161,7 +161,7 @@ public class Server{
     //TODO currently sending everything! Send based on accept time stamps
 
     public synchronized void startSendingEntropyResponse(Socket sock, EntropyReceiverMessage entRcvMsg){
-        PrintWriter pout = outstreams.get(sock);
+        ObjectOutputStream pout = outstreams.get(sock);
         if(entRcvMsg.csn < largestUnusedCsn-1)
             sendCommitedWrites(pout, entRcvMsg);
 
@@ -169,7 +169,7 @@ public class Server{
 
     }
 
-    private void sendTentativeWrites(PrintWriter pout, EntropyReceiverMessage entRcvMsg) {
+    private void sendTentativeWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg) {
         Iterator<Write> it = tentativeWrites.iterator();
         Write writeToSend;
 
@@ -179,7 +179,7 @@ public class Server{
         }
     }
 
-    public synchronized void sendCommitedWrites(PrintWriter pout, EntropyReceiverMessage entRcvMsg){
+    public synchronized void sendCommitedWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg){
         Iterator<Write> it = committedWrites.iterator();
         Write writeToSend;
 
@@ -189,25 +189,42 @@ public class Server{
         }
     }
 
-    public synchronized void sendEntropyWrite(PrintWriter pout, Write w){
-        pout.println((new EntropyWriteMessage(serverId, w)).stringify());
+    public synchronized void sendEntropyWrite(ObjectOutputStream pout, Write w){
+        try {
+            pout.writeObject((new EntropyWriteMessage(serverId, w)));
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
 
     public synchronized void sendEntropyRequest(Socket socket){
-        PrintWriter pout = outstreams.get(socket);
-        pout.println((new RequestEntropyMessage(serverId)).stringify());
+        ObjectOutputStream pout = outstreams.get(socket);
+        try {
+            pout.writeObject((new RequestEntropyMessage(serverId)));
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     public synchronized void respondToEntropyRequest(Socket sock){
         if(canEntropy){
 
-            PrintWriter pout = outstreams.get(sock);
+            ObjectOutputStream pout = null;
+            try {
+                pout = outstreams.get(sock);
+            } catch (Exception e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
             if(pout == null){
                 logger.error("Error outstream is "+serverSockets.get(1));
             }else{
                 canEntropy = false;
-                pout.println((new EntropyReceiverMessage(serverId, versionVector, largestUnusedCsn - 1)).stringify());
+                try {
+                    pout.writeObject((new EntropyReceiverMessage(serverId, versionVector, largestUnusedCsn - 1)));
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
             }
         }
     }
@@ -218,7 +235,7 @@ public class Server{
                 "---------------------------\n"+
                 "Tentative Writes number " + tentativeWrites.size()+
                 "\nCommited Writes number " + committedWrites.size()+"\n"+
-                "Version Vector: "+versionVector.strigify();
+                "Version Vector: "+versionVector.strigify()+"C Writes: "+committedWrites + "\n T writes: "+tentativeWrites;
         logger.info(logstring);
     }
 
@@ -227,8 +244,8 @@ public class Server{
             sendSock = new Socket();
             try {
                 sendSock.connect(new InetSocketAddress(InetAddress.getLocalHost(), svrPort));
-                PrintWriter pout = new PrintWriter(sendSock.getOutputStream(), true);
-                pout.println((new ServerConnectAck(serverId)).stringify());
+                ObjectOutputStream pout = new ObjectOutputStream(sendSock.getOutputStream());
+                pout.writeObject((new ServerConnectAck(serverId)));
                 logger.debug("adding server socket for " + svrNum + " in " + serverId + " port number " + sendSock.getPort());
                 serverSockets.put(svrNum, sendSock);
                 outstreams.put(sendSock, pout);

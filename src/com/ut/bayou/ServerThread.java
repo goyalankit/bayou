@@ -2,9 +2,8 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -24,53 +23,59 @@ public class ServerThread extends Thread {
 
     public void run() {
         logger.debug("Server thread started by " + pServer);
-        while (true) {
-            try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                String line;
-                while ((line = in.readLine()) != null) {
+
+        try {
+            ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+
+            while (true) {
+                Object line;
+                while ((line = in.readObject()) != null) {
                     logger.debug(line + " Message received");
+
                     deliver(line);
                     setTimeoutForEntropy();
                 }
-            } catch (SocketTimeoutException s) {
-                pServer.startEntropy();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (SocketTimeoutException s) {
+            pServer.startEntropy();
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+
         }
     }
 
-    public void deliver(String msg) {
-        if (msg.startsWith(Constants.UserAction)) {
-            UserAction ua = UserAction.unStringify(msg);
+    public void deliver(Object msg) {
+        if (msg instanceof UserAction) {
+            UserAction ua = (UserAction) msg;
             logger.debug(pServer + " User ACTION RECEIVED");
             performPlaylistAction(ua);
-        } else if (msg.startsWith(Constants.ClientConnectAck)) {
+        } else if (msg instanceof ClientConnectAck) {
             logger.debug(pServer + " Client ACK RECEIVED");
-            ClientConnectAck cca = ClientConnectAck.unStringify(msg);
+            ClientConnectAck cca = (ClientConnectAck) msg;
             pServer.addClientSocket(sock.getPort(), sock);
             forClient = true;
-        } else if (msg.startsWith(Constants.ServerConnectAck)) {
+        } else if (msg instanceof ServerConnectAck) {
             logger.debug(pServer + " Server ACK RECEIVED");
-            ServerConnectAck cca = ServerConnectAck.unStringify(msg);
+            ServerConnectAck cca = (ServerConnectAck) msg;
             pServer.addServerSocket(cca.srcId, sock);
             connectedServerId = cca.srcId;
             forClient = false;
-        } else if(msg.startsWith(Constants.RequestEntropyMessage)){
-            RequestEntropyMessage reqEntMsg = RequestEntropyMessage.unStringify(msg);
-            logger.debug(pServer + " Entropy Request Received from server "+ reqEntMsg.srcId);
+        } else if (msg instanceof RequestEntropyMessage) {
+            RequestEntropyMessage reqEntMsg = (RequestEntropyMessage) msg;
+            logger.debug(pServer + " Entropy Request Received from server " + reqEntMsg.srcId);
             pServer.respondToEntropyRequest(sock);
-        }else if(msg.startsWith(Constants.EntropyReceiverMessage)){
+        } else if (msg instanceof EntropyReceiverMessage) {
             logger.debug(pServer + " Entropy Response Received");
-            EntropyReceiverMessage reqEntMsg = EntropyReceiverMessage.unStringify(msg);
+            EntropyReceiverMessage reqEntMsg = (EntropyReceiverMessage) msg;
             pServer.startSendingEntropyResponse(sock, reqEntMsg);
-        }else if(msg.startsWith(Constants.EntropyWriteMessage)){
-            EntropyWriteMessage reqEntMsg = EntropyWriteMessage.unstringify(msg);
+        } else if (msg instanceof EntropyWriteMessage) {
+            EntropyWriteMessage reqEntMsg = (EntropyWriteMessage) msg;
             //pServer.startSendingEntropyResponse(sock, reqEntMsg);
 
-        }else{
-            logger.info(msg+" received");
+        } else {
+            logger.info(msg + " received");
         }
 
     }

@@ -2,9 +2,9 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.util.Scanner;
+import java.io.Serializable;
 
-public class Message {
+public class Message implements Serializable{
     int srcId;
     static Logger logger = Logger.getLogger("Message");
     public String toString(){
@@ -17,16 +17,8 @@ class RequestEntropyMessage extends Message{ //Message to send a request to perf
         this.srcId = srcId;
     }
 
-    public String stringify(){
+    public String toString(){
         return  "RequestEntropyMessage"+Constants.Delimiter+""+srcId;
-    }
-
-    public static RequestEntropyMessage unStringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        if(!topLevel[0].equals(Constants.RequestEntropyMessage)){
-            throw new ClassCastException();
-        }
-        return new RequestEntropyMessage(Integer.parseInt(topLevel[1]));
     }
 }
 
@@ -37,21 +29,8 @@ class EntropyWriteMessage extends Message{ //Writes sent by sender to receiver i
         this.write = w;
     }
 
-    public String stringify(){
+    public String toString(){
         return  "EntropyWriteMessage"+Constants.Delimiter+srcId+Constants.SPACE+write.stringify();
-    }
-
-    public static EntropyWriteMessage unstringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        EntropyWriteMessage ewm = new EntropyWriteMessage(-1, null);
-        if(!topLevel[0].equals(Constants.EntropyWriteMessage)){
-            throw new ClassCastException();
-        }
-
-        Scanner scanner = new Scanner(topLevel[1]);
-        ewm.srcId = scanner.nextInt();
-        ewm.write = Write.unStringify(scanner.next());
-        return ewm;
     }
 
 }
@@ -66,26 +45,12 @@ class EntropyReceiverMessage extends Message{ //Send your version vector after e
         this.csn = csn;
     }
 
-    public String stringify(){
+    public String toString(){
         String s = "";
         s += "EntropyReceiverMessage"+Constants.Delimiter+srcId
                 +Constants.SPACE+ VV.strigify()+Constants.SPACE+csn ;
         return s;
     }
-
-    public static EntropyReceiverMessage unStringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        EntropyReceiverMessage erm = new EntropyReceiverMessage(-1, null, -1);
-        if(!topLevel[0].equals(Constants.EntropyReceiverMessage)){
-            throw new ClassCastException();
-        }
-        Scanner scanner = new Scanner(topLevel[1]);
-        erm.srcId = scanner.nextInt();
-        erm.VV = VersionVector.unStringify(scanner.next());
-        erm.csn = scanner.nextInt();
-        return erm;
-    }
-
 }
 
 
@@ -94,16 +59,8 @@ class ServerConnectAck extends Message{  //Server acknowledges to client after c
         this.srcId = sId;
     }
 
-    public String stringify(){
+    public String toString(){
         return  "ServerConnectAck"+Constants.Delimiter+""+srcId;
-    }
-
-    public static ServerConnectAck unStringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        if(!topLevel[0].equals(Constants.ServerConnectAck)){
-            throw new ClassCastException();
-        }
-        return new ServerConnectAck(Integer.parseInt(topLevel[1]));
     }
 }
 
@@ -112,18 +69,9 @@ class ClientConnectAck extends Message{ //Client acknowledges to server after co
         this.srcId = sId;
     }
 
-    public String stringify(){
+    public String toString(){
         return  "ClientConnectAck"+Constants.Delimiter+""+srcId;
     }
-
-    public static ClientConnectAck unStringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        if(!topLevel[0].equals(Constants.ClientConnectAck)){
-            throw new ClassCastException();
-        }
-        return new ClientConnectAck(Integer.parseInt(topLevel[1]));
-    }
-
 }
 
 class UserAction extends Message{ //Client to server user action propagation message.
@@ -138,7 +86,7 @@ class UserAction extends Message{ //Client to server user action propagation mes
         this.url = url;
     }
 
-    public String stringify(){
+    public String toString(){
         String s = "";
         s = "UserAction"+Constants.Delimiter +
                 srcId +Constants.SPACE+
@@ -146,20 +94,5 @@ class UserAction extends Message{ //Client to server user action propagation mes
                 song +Constants.SPACE+url;
 
         return s;
-    }
-
-    public static UserAction unStringify(String s){
-        String [] topLevel = s.split(Constants.Delimiter,2);
-        UserAction ua = new UserAction(-1, null, null, null);
-        if(!topLevel[0].equals(Constants.UserAction)){
-            throw new ClassCastException();
-        }
-        Scanner scanner = new Scanner(topLevel[1]);
-        ua.srcId = scanner.nextInt();
-        ua.action = scanner.next();
-        ua.song = scanner.next();
-        ua.url = scanner.next();
-
-        return ua;
     }
 }

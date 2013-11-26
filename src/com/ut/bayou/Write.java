@@ -1,8 +1,9 @@
 package com.ut.bayou;
 
+import java.io.Serializable;
 import java.util.Scanner;
 
-public class Write implements Comparable{
+public class Write implements Comparable, Serializable{
     private long acceptStamp;
     private long csn;
     private int sId;

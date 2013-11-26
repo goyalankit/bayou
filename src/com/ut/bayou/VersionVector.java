@@ -1,9 +1,10 @@
 package com.ut.bayou;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Scanner;
 
-public class VersionVector {
+public class VersionVector implements Serializable {
     private HashMap<Integer, Long> vector;
 
     public VersionVector(){

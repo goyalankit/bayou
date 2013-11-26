@@ -1,0 +1,3 @@
+join 0
+join 1
+start client 0 1

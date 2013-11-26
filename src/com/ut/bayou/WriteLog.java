@@ -20,14 +20,14 @@ public class WriteLog {
         return writes.iterator();
     }
 
+    @Override
     public String toString(){
         String s = "";
         Iterator<Write> it = writes.iterator();
         while(it.hasNext()){
-            s += "Writes:"; //Todo add proper formatting here for viewing purposes.
+            s += ""+it.next().stringify()+"\n"; //Todo add proper formatting here for viewing purposes.
         }
-
-        return "";
+        return s;
     }
 
     public int size(){
