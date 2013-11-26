@@ -14,6 +14,7 @@ public class ServerThread extends Thread {
     private Server pServer;
     private static Logger logger = Logger.getLogger("Server");
     private static boolean forClient = false;
+    private int connectedServerId;
 
     public ServerThread(Server server, Socket sock) {
         this.sock = sock;
@@ -30,9 +31,10 @@ public class ServerThread extends Thread {
                 while ((line = in.readLine()) != null) {
                     logger.debug(line + " Message received");
                     deliver(line);
+                    setTimeoutForEntropy();
                 }
             } catch (SocketTimeoutException s) {
-                logger.error("Socket timed out!");
+                pServer.startEntropy();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -42,20 +44,35 @@ public class ServerThread extends Thread {
     public void deliver(String msg) {
         if (msg.startsWith(Constants.UserAction)) {
             UserAction ua = UserAction.unStringify(msg);
-            logger.debug(this + " User ACTION RECEIVED");
+            logger.debug(pServer + " User ACTION RECEIVED");
             performPlaylistAction(ua);
         } else if (msg.startsWith(Constants.ClientConnectAck)) {
-            logger.debug(this + " Client ACK RECEIVED");
+            logger.debug(pServer + " Client ACK RECEIVED");
             ClientConnectAck cca = ClientConnectAck.unStringify(msg);
             pServer.addClientSocket(sock.getPort(), sock);
             forClient = true;
         } else if (msg.startsWith(Constants.ServerConnectAck)) {
-            logger.debug(this + " Server ACK RECEIVED");
+            logger.debug(pServer + " Server ACK RECEIVED");
             ServerConnectAck cca = ServerConnectAck.unStringify(msg);
-            pServer.addServerSocket(sock.getPort(), sock);
+            pServer.addServerSocket(cca.srcId, sock);
+            connectedServerId = cca.srcId;
             forClient = false;
-            setTimeoutForEntropy();
+        } else if(msg.startsWith(Constants.RequestEntropyMessage)){
+            RequestEntropyMessage reqEntMsg = RequestEntropyMessage.unStringify(msg);
+            logger.debug(pServer + " Entropy Request Received from server "+ reqEntMsg.srcId);
+            pServer.respondToEntropyRequest(sock);
+        }else if(msg.startsWith(Constants.EntropyReceiverMessage)){
+            logger.debug(pServer + " Entropy Response Received");
+            EntropyReceiverMessage reqEntMsg = EntropyReceiverMessage.unStringify(msg);
+            pServer.startSendingEntropyResponse(sock, reqEntMsg);
+        }else if(msg.startsWith(Constants.EntropyWriteMessage)){
+            EntropyWriteMessage reqEntMsg = EntropyWriteMessage.unstringify(msg);
+            //pServer.startSendingEntropyResponse(sock, reqEntMsg);
+
+        }else{
+            logger.info(msg+" received");
         }
+
     }
 
     private void setTimeoutForEntropy() {

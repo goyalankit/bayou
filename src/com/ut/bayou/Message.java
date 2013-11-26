@@ -12,14 +12,84 @@ public class Message {
     }
 }
 
-class BeginEntropyMessage extends Message{
-    BeginEntropyMessage(int srcId) {
+class RequestEntropyMessage extends Message{ //Message to send a request to perform anti-entropy.
+    RequestEntropyMessage(int srcId) {
         this.srcId = srcId;
+    }
+
+    public String stringify(){
+        return  "RequestEntropyMessage"+Constants.Delimiter+""+srcId;
+    }
+
+    public static RequestEntropyMessage unStringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        if(!topLevel[0].equals(Constants.RequestEntropyMessage)){
+            throw new ClassCastException();
+        }
+        return new RequestEntropyMessage(Integer.parseInt(topLevel[1]));
     }
 }
 
+class EntropyWriteMessage extends Message{ //Writes sent by sender to receiver in anti-entropy
+    Write write;
+    EntropyWriteMessage(int srcId, Write w){
+        this.srcId = srcId;
+        this.write = w;
+    }
 
-class ServerConnectAck extends Message{
+    public String stringify(){
+        return  "EntropyWriteMessage"+Constants.Delimiter+srcId+Constants.SPACE+write.stringify();
+    }
+
+    public static EntropyWriteMessage unstringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        EntropyWriteMessage ewm = new EntropyWriteMessage(-1, null);
+        if(!topLevel[0].equals(Constants.EntropyWriteMessage)){
+            throw new ClassCastException();
+        }
+
+        Scanner scanner = new Scanner(topLevel[1]);
+        ewm.srcId = scanner.nextInt();
+        ewm.write = Write.unStringify(scanner.next());
+        return ewm;
+    }
+
+}
+
+class EntropyReceiverMessage extends Message{ //Send your version vector after entropy request.
+    VersionVector VV;
+    int csn;
+
+    EntropyReceiverMessage(int sId, VersionVector v, int csn){
+        this.srcId = sId;
+        this.VV = v;
+        this.csn = csn;
+    }
+
+    public String stringify(){
+        String s = "";
+        s += "EntropyReceiverMessage"+Constants.Delimiter+srcId
+                +Constants.SPACE+ VV.strigify()+Constants.SPACE+csn ;
+        return s;
+    }
+
+    public static EntropyReceiverMessage unStringify(String s){
+        String [] topLevel = s.split(Constants.Delimiter,2);
+        EntropyReceiverMessage erm = new EntropyReceiverMessage(-1, null, -1);
+        if(!topLevel[0].equals(Constants.EntropyReceiverMessage)){
+            throw new ClassCastException();
+        }
+        Scanner scanner = new Scanner(topLevel[1]);
+        erm.srcId = scanner.nextInt();
+        erm.VV = VersionVector.unStringify(scanner.next());
+        erm.csn = scanner.nextInt();
+        return erm;
+    }
+
+}
+
+
+class ServerConnectAck extends Message{  //Server acknowledges to client after connecting
     ServerConnectAck(int sId) {
         this.srcId = sId;
     }
@@ -37,7 +107,7 @@ class ServerConnectAck extends Message{
     }
 }
 
-class ClientConnectAck extends Message{
+class ClientConnectAck extends Message{ //Client acknowledges to server after connecting
     ClientConnectAck(int sId) {
         this.srcId = sId;
     }
@@ -56,11 +126,7 @@ class ClientConnectAck extends Message{
 
 }
 
-class AckBeginEntropy extends Message{
-
-}
-
-class UserAction extends Message{
+class UserAction extends Message{ //Client to server user action propagation message.
     String action;
     String song;
     String url;

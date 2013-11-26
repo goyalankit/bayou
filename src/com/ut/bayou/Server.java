@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class Server{
     private int serverId;
@@ -26,6 +27,9 @@ public class Server{
     private boolean isPrimary;
     private int largestUnusedCsn;
 
+    private boolean canEntropy;
+    private HashMap<Integer, Socket> entropiedWith;
+
     private static Logger logger;
 
     public Server(int serverId, int port) {
@@ -40,6 +44,8 @@ public class Server{
         this.isPrimary = false;
         this.versionVector = new VersionVector();
         this.largestUnusedCsn = 0;
+        this.canEntropy = true;
+        this.entropiedWith = new HashMap<Integer, Socket>();
         versionVector.addNewServerEntry(serverId, 0); //add your own entry to vector first.
         logger = Logger.getLogger("Server");
         initializeServer();
@@ -95,8 +101,9 @@ public class Server{
     }
 
     public synchronized void addServerSocket(int sId, Socket socket){
-        logger.debug("adding server socket");
+        logger.debug("adding server socket for "+sId +" in "+serverId + " and port " + socket.getPort());
         serverSockets.put(sId, socket);
+        versionVector.addNewServerEntry(sId, 0);
     }
 
     //playlist related methods
@@ -137,6 +144,74 @@ public class Server{
     }
 
 
+    public synchronized void startEntropy(){
+        if(canEntropy){
+            if(entropiedWith.size() == serverSockets.size())
+                entropiedWith.clear();
+            for(Integer sid : serverSockets.keySet()){
+                if(!entropiedWith.containsKey(sid)){
+                    logger.info(this + " starting entropy with server " + sid + " at " + serverSockets.get(sid).getPort());
+                    sendEntropyRequest(serverSockets.get(sid));
+                }
+            }
+        }
+    }
+
+
+    //TODO currently sending everything! Send based on accept time stamps
+
+    public synchronized void startSendingEntropyResponse(Socket sock, EntropyReceiverMessage entRcvMsg){
+        PrintWriter pout = outstreams.get(sock);
+        if(entRcvMsg.csn < largestUnusedCsn-1)
+            sendCommitedWrites(pout, entRcvMsg);
+
+        sendTentativeWrites(pout, entRcvMsg);
+
+    }
+
+    private void sendTentativeWrites(PrintWriter pout, EntropyReceiverMessage entRcvMsg) {
+        Iterator<Write> it = tentativeWrites.iterator();
+        Write writeToSend;
+
+        while (it.hasNext()){
+            writeToSend = it.next();
+            sendEntropyWrite(pout, writeToSend);
+        }
+    }
+
+    public synchronized void sendCommitedWrites(PrintWriter pout, EntropyReceiverMessage entRcvMsg){
+        Iterator<Write> it = committedWrites.iterator();
+        Write writeToSend;
+
+        while(it.hasNext()){
+            writeToSend = it.next();
+            sendEntropyWrite(pout, writeToSend);
+        }
+    }
+
+    public synchronized void sendEntropyWrite(PrintWriter pout, Write w){
+        pout.println((new EntropyWriteMessage(serverId, w)).stringify());
+    }
+
+
+    public synchronized void sendEntropyRequest(Socket socket){
+        PrintWriter pout = outstreams.get(socket);
+        pout.println((new RequestEntropyMessage(serverId)).stringify());
+    }
+
+    public synchronized void respondToEntropyRequest(Socket sock){
+        if(canEntropy){
+
+            PrintWriter pout = outstreams.get(sock);
+            if(pout == null){
+                logger.error("Error outstream is "+serverSockets.get(1));
+            }else{
+                canEntropy = false;
+                pout.println((new EntropyReceiverMessage(serverId, versionVector, largestUnusedCsn - 1)).stringify());
+            }
+        }
+    }
+
     public void printLog(){
         String logstring = "";
         logstring = this + "$ logs\n"+
@@ -154,8 +229,11 @@ public class Server{
                 sendSock.connect(new InetSocketAddress(InetAddress.getLocalHost(), svrPort));
                 PrintWriter pout = new PrintWriter(sendSock.getOutputStream(), true);
                 pout.println((new ServerConnectAck(serverId)).stringify());
+                logger.debug("adding server socket for " + svrNum + " in " + serverId + " port number " + sendSock.getPort());
                 serverSockets.put(svrNum, sendSock);
                 outstreams.put(sendSock, pout);
+                versionVector.addNewServerEntry(svrNum, 0);
+                new ServerThread(this, sendSock);
             } catch (IOException e) {
                 e.printStackTrace();
             }

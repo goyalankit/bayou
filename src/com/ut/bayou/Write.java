@@ -1,5 +1,7 @@
 package com.ut.bayou;
 
+import java.util.Scanner;
+
 public class Write implements Comparable{
     private long acceptStamp;
     private long csn;
@@ -19,6 +21,18 @@ public class Write implements Comparable{
         this.song = song;
         this.url = url;
     }
+
+    public String stringify(){
+        return acceptStamp+Constants.SPACE+csn+Constants.SPACE+sId+Constants.SPACE
+                +command+Constants.SPACE+committed+Constants.SPACE+song+Constants.SPACE+url;
+    }
+
+    public static Write unStringify(String s){
+        Scanner scanner = new Scanner(s);
+        return new Write(scanner.nextLong(), scanner.nextLong(),scanner.nextInt(),
+                scanner.nextBoolean(), scanner.next(), scanner.next(), scanner.next());
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -52,8 +66,4 @@ public class Write implements Comparable{
         int diff = (int)(this.acceptStamp - ((Write)second).acceptStamp);
         return diff != 0 ? diff : sId - ((Write)second).sId;
     }
-
-
-
-
 }

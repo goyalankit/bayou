@@ -22,6 +22,10 @@ public class WriteLog {
 
     public String toString(){
         String s = "";
+        Iterator<Write> it = writes.iterator();
+        while(it.hasNext()){
+            s += "Writes:"; //Todo add proper formatting here for viewing purposes.
+        }
 
         return "";
     }
