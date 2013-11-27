@@ -14,11 +14,18 @@ public class VersionVector implements Serializable {
         vector.put(serverId, timestamp);
     }
 
-    public void updateMyAcceptStamp(ServerId serverId, long newAcceptStamp){
-        if(vector.containsKey(serverId))
-            vector.put(serverId, newAcceptStamp);
-        else
+    public void updateAcceptStamp(ServerId serverId, long newAcceptStamp){
+        if(vector.containsKey(serverId)){
+            if(newAcceptStamp > vector.get(serverId))
+                vector.put(serverId, newAcceptStamp);
+        }
+        else{
             System.err.println("Something is wrong with version vector.." + serverId.hrNumber);
+        }
+    }
+
+    public boolean hasServerId(ServerId sid){
+        return vector.containsKey(sid);
     }
 
     public String strigify(){

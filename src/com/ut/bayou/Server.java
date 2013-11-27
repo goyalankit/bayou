@@ -100,31 +100,34 @@ public class Server{
         }
     }
 
+    //Server Creation
     public synchronized Write addCreationWrite(int svrNum){
         Write creationWrite;
         long acceptTime = System.currentTimeMillis();
         if(isPrimary){
             largestCSN = Math.max(acceptTime, largestCSN+1);
-            creationWrite = new Write(acceptTime, largestCSN++, serverId, isPrimary, Constants.CREATIONWRITE, null,null);
+            creationWrite = new Write(acceptTime, largestCSN++, serverId, isPrimary, Constants.CREATIONWRITE+":"+svrNum, null,null);
             committedWrites.addToLog(creationWrite);
 
             ServerId otherId = new ServerId(acceptTime, serverId, svrNum);
             logger.error("ServerId "+otherId);
             versionVector.addNewServerEntry(otherId, acceptTime);
+            versionVector.updateAcceptStamp(serverId, acceptTime);
         }
         else{
-            creationWrite = new Write(System.currentTimeMillis(), -1, serverId, isPrimary, Constants.CREATIONWRITE, null,null);
+            creationWrite = new Write(System.currentTimeMillis(), -1, serverId, isPrimary, Constants.CREATIONWRITE+":"+svrNum, null,null);
             tentativeWrites.addToLog(creationWrite);
             versionVector.addNewServerEntry(new ServerId(acceptTime, serverId, serverId.hrNumber), acceptTime);
+            versionVector.updateAcceptStamp(serverId, acceptTime);
         }
         return creationWrite;
     }
 
     public void updateServerIdentity(Write write, int svrNum){
         this.serverId = new ServerId(write.acceptStamp,write.sId,svrNum);
-        tentativeWrites.addToLog(write);
+        //tentativeWrites.addToLog(write);
         versionVector.addNewServerEntry(this.serverId, write.acceptStamp);
-        largestCSN = write.acceptStamp + 1;
+        //largestCSN = write.acceptStamp + 1;
     }
 
     public synchronized void addClientSocket(int port, Socket socket){
@@ -185,7 +188,7 @@ public class Server{
             Write w = new Write(acceptStamp, -1, serverId, false, action , song, url);
             tentativeWrites.addToLog(w);
         }
-        versionVector.updateMyAcceptStamp(serverId, acceptStamp);
+        versionVector.updateAcceptStamp(serverId, acceptStamp);
     }
 
 
@@ -211,6 +214,7 @@ public class Server{
     public synchronized void startSendingEntropyResponse(Socket sock, EntropyReceiverMessage entRcvMsg){
         ObjectOutputStream pout = outstreams.get(sock);
         seqNumber = 0;
+        logger.info(this+ " Received CSN " + entRcvMsg.csn + " My csn " + largestCSN);
         if(entRcvMsg.csn < largestCSN){
             logger.debug(this+" Sending committed writes..");
             sendCommitedWrites(pout, entRcvMsg);
@@ -249,6 +253,7 @@ public class Server{
 
     public synchronized void sendEntropyWrite(ObjectOutputStream pout, Write w){
         try {
+            logger.info("Sending entropy write. "+ w.command);
             pout.writeObject((new EntropyWriteMessage(serverId, w, seqNumber)));
         } catch (IOException e) {
             e.printStackTrace();
@@ -313,10 +318,12 @@ public class Server{
             logger.error("Missing some messages. Need to wait and sleep");
         }{
             for (int i = 0; i < efAck.numOfMessages; i++) {
+
                 Write thewrite = entropyWrites.get(i);
                 if(thewrite.committed){
                     committedWrites.addToLog(thewrite);
                     tentativeWrites.removeWrite(thewrite);
+                    largestCSN = Math.max(thewrite.csn, largestCSN);
                 }else{
                     if(isPrimary){
                         largestCSN = Math.max(System.currentTimeMillis(), largestCSN+1);
@@ -327,6 +334,11 @@ public class Server{
                         tentativeWrites.addToLog(thewrite);
                     }
                 }
+
+                if(versionVector.hasServerId(thewrite.sId))
+                    versionVector.updateAcceptStamp(thewrite.sId, thewrite.acceptStamp);
+                else
+                    versionVector.addNewServerEntry(thewrite.sId, thewrite.acceptStamp);
             }
 
             entropyWrites.clear();
@@ -341,16 +353,35 @@ public class Server{
         Iterator<Write> it = committedWrites.iterator();
         while(it.hasNext()){
             Write w = it.next();
+            if(w.command.startsWith("CREATION")){
+                processCreationWrite(w);
+            }
             processWrite(w.song, w.url, w.command);
         }
 
         it = tentativeWrites.iterator();
         while(it.hasNext()){
             Write w = it.next();
+            if(w.command.startsWith("CREATION")){
+                processCreationWrite(w);
+            }
             processWrite(w.song, w.url, w.command);
         }
 
          canEntropy = true;
+    }
+
+    private void processCreationWrite(Write w) {
+        int svrNum  =Integer.parseInt(w.command.split(":",2)[1]);
+        if(serverId == null && svrNum == secServerId){
+            updateServerIdentity(w, secServerId); //set your own server id and update version vector YOUR CREATION.
+        }
+        else{
+            ServerId newServerId = new ServerId(w.acceptStamp,w.sId,svrNum);
+            if(!versionVector.hasServerId(newServerId)){
+                versionVector.addNewServerEntry(newServerId, w.acceptStamp);
+            }
+        }
     }
 
     //Simply edit the playlist
@@ -358,7 +389,7 @@ public class Server{
         if(command.equals(Constants.ADD))
             playlist.add(song,url);
         else if(command.equals(Constants.EDIT))
-            playlist.edit(song,url);
+            playlist.edit(song, url);
         else if(command.equals(Constants.DELETE))
             playlist.delete(song);
     }
@@ -367,29 +398,31 @@ public class Server{
         String logstring = "";
         logstring = this + "$ logs\n"+
                 "---------------------------\n"+
-                "Tentative Writes number " + tentativeWrites.size()+
-                "\nCommited Writes number " + committedWrites.size()+"\n"+
-                "Version Vector: "+versionVector.strigify()+"C Writes: "+committedWrites + "\n T writes: "+tentativeWrites;
+                "Tentative Writes number " + tentativeWrites.size() +
+                "\nCommited Writes number " + committedWrites.size() + "\n";
+
         logger.info(logstring);
     }
 
     public void connectToYou(ServerId svrId, int svrPort){
-        if(!(clientSockets.containsKey(svrId) || clientSockets.containsKey(svrPort))){
-            sendSock = new Socket();
+        if(!(serverSockets.containsKey(svrId))){
             try {
+                sendSock = new Socket();
                 sendSock.connect(new InetSocketAddress(InetAddress.getLocalHost(), svrPort));
                 ObjectOutputStream pout = new ObjectOutputStream(sendSock.getOutputStream());
                 pout.writeObject((new ServerConnectAck(serverId, new ServerId(System.currentTimeMillis(), serverId, -1))));
                 logger.debug("adding server socket for " + svrId + " in " + secServerId + " port number " + sendSock.getPort());
                 serverSockets.put(svrId, sendSock);
                 outstreams.put(sendSock, pout);
-                versionVector.addNewServerEntry(svrId, 0);
+                if(!versionVector.hasServerId(svrId))
+                    versionVector.addNewServerEntry(svrId, 0);
                 new ServerThread(this, sendSock);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
     public ServerId getServerId() {
         return serverId;

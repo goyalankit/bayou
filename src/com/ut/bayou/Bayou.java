@@ -190,6 +190,12 @@ public class Bayou {
             servers.put(server.getServerId(), server);
             easyServers.put(svrNum, server.getServerId());
 
+            if(primaryServer != svrNum){
+                servers.get(easyServers.get(0)).connectToYou(easyServers.get(svrNum), serverport.get(svrNum));
+                //reconnectServer(svrNum);
+                servers.get(easyServers.get(0)).startEntropyWith(server.getServerId());
+            }
+
         }else{
             logger.error("Server number " + svrNum + " already running");
         }

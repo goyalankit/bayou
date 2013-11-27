@@ -19,6 +19,6 @@ public abstract class Constants {
     public static final String SubDelimiter = "::";
     public static final String VVSPACE = "_";
     public static final int INFINITY = -1;
-    public static final String CREATIONWRITE = "CREATION WRITE";
+    public static final String CREATIONWRITE = "CREATIONWRITE";
 
 }
