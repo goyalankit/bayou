@@ -13,10 +13,12 @@ public abstract class Constants {
 //    public static final String RequestEntropyMessage = "RequestEntropyMessage";
 //    public static final String EntropyReceiverMessage = "EntropyReceiverMessage";
 //    public static final String EntropyWriteMessage = "EntropyWriteMessage";
-    public static final int EntropyInverval = 4000; //seconds
+    public static final int EntropyInverval = 10000; //seconds
     public static final String Delimiter = ":::";
     public static final String SPACE= " ";
     public static final String SubDelimiter = "::";
     public static final String VVSPACE = "_";
+    public static final int INFINITY = -1;
+    public static final String CREATIONWRITE = "CREATION WRITE";
 
 }

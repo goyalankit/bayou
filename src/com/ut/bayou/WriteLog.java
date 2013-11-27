@@ -20,6 +20,18 @@ public class WriteLog {
         return writes.iterator();
     }
 
+    public void removeWrite(Write w){
+        Iterator<Write> it = writes.iterator();
+        Write w1;
+        while(it.hasNext()){
+            w1 = it.next();
+            if(w1.acceptStamp == w.acceptStamp && w1.sId.equals(w.sId)){
+                System.out.println("INFO removing write from the writes list");
+                it.remove();
+            }
+        }
+    }
+
     @Override
     public String toString(){
         String s = "";

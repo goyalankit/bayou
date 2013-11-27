@@ -29,7 +29,7 @@ public class Client {
             sock = new Socket("localhost", port);
             outstream = new ObjectOutputStream(sock.getOutputStream());
             instream = new ObjectInputStream(sock.getInputStream());
-            outstream.writeObject((new ClientConnectAck(clientId)));
+            outstream.writeObject((new ClientConnectAck()));
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {

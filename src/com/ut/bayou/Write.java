@@ -1,19 +1,18 @@
 package com.ut.bayou;
 
 import java.io.Serializable;
-import java.util.Scanner;
 
 public class Write implements Comparable, Serializable{
-    private long acceptStamp;
-    private long csn;
-    private int sId;
-    private String command;
-    private boolean committed;
-    private String song;
-    private String url;
+    long acceptStamp;
+    long csn;
+    ServerId sId;
+    String command;
+    boolean committed;
+    String song;
+    String url;
 
 
-    public Write(long acceptStamp, long csn, int sId, boolean committed, String command, String song, String url){
+    public Write(long acceptStamp, long csn, ServerId sId, boolean committed, String command, String song, String url){
         this.acceptStamp = acceptStamp;
         this.csn = csn;
         this.sId = sId;
@@ -27,13 +26,6 @@ public class Write implements Comparable, Serializable{
         return acceptStamp+Constants.SPACE+csn+Constants.SPACE+sId+Constants.SPACE
                 +command+Constants.SPACE+committed+Constants.SPACE+song+Constants.SPACE+url;
     }
-
-    public static Write unStringify(String s){
-        Scanner scanner = new Scanner(s);
-        return new Write(scanner.nextLong(), scanner.nextLong(),scanner.nextInt(),
-                scanner.nextBoolean(), scanner.next(), scanner.next(), scanner.next());
-    }
-
 
     @Override
     public boolean equals(Object o) {
@@ -65,6 +57,6 @@ public class Write implements Comparable, Serializable{
         if(!secondWrite.committed && this.committed)
             return -1;
         int diff = (int)(this.acceptStamp - ((Write)second).acceptStamp);
-        return diff != 0 ? diff : sId - ((Write)second).sId;
+        return diff != 0 ? diff : (sId.hrNumber - ((Write)second).sId.hrNumber);
     }
 }

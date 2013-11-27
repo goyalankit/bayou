@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import java.io.Serializable;
 
 public class Message implements Serializable{
-    int srcId;
+    ServerId srcId;
     static Logger logger = Logger.getLogger("Message");
     public String toString(){
         return "srcId="+srcId;
@@ -13,7 +13,7 @@ public class Message implements Serializable{
 }
 
 class RequestEntropyMessage extends Message{ //Message to send a request to perform anti-entropy.
-    RequestEntropyMessage(int srcId) {
+    RequestEntropyMessage(ServerId srcId) {
         this.srcId = srcId;
     }
 
@@ -24,9 +24,11 @@ class RequestEntropyMessage extends Message{ //Message to send a request to perf
 
 class EntropyWriteMessage extends Message{ //Writes sent by sender to receiver in anti-entropy
     Write write;
-    EntropyWriteMessage(int srcId, Write w){
+    int seqNumber;
+    EntropyWriteMessage(ServerId srcId, Write w, int seqNumber){
         this.srcId = srcId;
         this.write = w;
+        this.seqNumber = seqNumber;
     }
 
     public String toString(){
@@ -37,9 +39,9 @@ class EntropyWriteMessage extends Message{ //Writes sent by sender to receiver i
 
 class EntropyReceiverMessage extends Message{ //Send your version vector after entropy request.
     VersionVector VV;
-    int csn;
+    long csn;
 
-    EntropyReceiverMessage(int sId, VersionVector v, int csn){
+    EntropyReceiverMessage(ServerId sId, VersionVector v, long csn){
         this.srcId = sId;
         this.VV = v;
         this.csn = csn;
@@ -53,10 +55,20 @@ class EntropyReceiverMessage extends Message{ //Send your version vector after e
     }
 }
 
+class EntropyFinishedAck extends Message{
+    int numOfMessages;
+
+    EntropyFinishedAck(ServerId sId, int numOfMessages) {
+        this.srcId = sId;
+        this.numOfMessages = numOfMessages;
+    }
+}
 
 class ServerConnectAck extends Message{  //Server acknowledges to client after connecting
-    ServerConnectAck(int sId) {
+    ServerId serverId;
+    ServerConnectAck(ServerId sId, ServerId serverId) {
         this.srcId = sId;
+        this.serverId = serverId;
     }
 
     public String toString(){
@@ -65,8 +77,8 @@ class ServerConnectAck extends Message{  //Server acknowledges to client after c
 }
 
 class ClientConnectAck extends Message{ //Client acknowledges to server after connecting
-    ClientConnectAck(int sId) {
-        this.srcId = sId;
+    ClientConnectAck() {
+        //this.srcId = sId;
     }
 
     public String toString(){
@@ -78,9 +90,11 @@ class UserAction extends Message{ //Client to server user action propagation mes
     String action;
     String song;
     String url;
+    int ClientSrc;
 
     UserAction(int clientId, String action, String song, String url) {
-        this.srcId = clientId;
+        this.ClientSrc = clientId;
+        this.srcId = null;
         this.action = action;
         this.song = song;
         this.url = url;

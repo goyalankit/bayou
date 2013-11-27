@@ -14,8 +14,9 @@ public class Bayou {
     private static Scanner scanner;
     private static int nextPort;
     private static HashMap<Integer, Client> clients = new HashMap<Integer, Client>();
-    private static HashMap<Integer, Server> servers = new HashMap<Integer, Server>();
+    private static HashMap<ServerId, Server> servers = new HashMap<ServerId, Server>();
     private static HashMap<Integer, Integer> serverport = new HashMap<Integer, Integer>();
+    private static HashMap<Integer, ServerId> easyServers = new HashMap<Integer, ServerId>();
     private static boolean runScript = false;
     private static String scriptName;
     private static long delayInterval;
@@ -120,18 +121,28 @@ public class Bayou {
                     break;
                 case PRINTLOG:
                     if(s.length > 1)
-                        servers.get(Integer.parseInt(s[1])).printLog();
+                        servers.get(easyServers.get(Integer.parseInt(s[1]))).printLog();
                     else
                         for(Server server: servers.values())
                             server.printLog();
+                    break;
+                case PRINTSID:
+                    servers.get(easyServers.get(Integer.parseInt(s[1]))).printServerId();
                     break;
                 case EXIT:
                     logger.info("Exiting Bayou");
                     System.exit(0);
                     break;
+                case STARTENTROPY:
+                    servers.get(easyServers.get(Integer.parseInt(s[1]))).startEntropyWith(easyServers.get(Integer.parseInt(s[2])));
+                    break;
+                case PRINTSERVERPLAYLIST:
+                    servers.get(easyServers.get(Integer.parseInt(s[1]))).printServerPlaylist();
+                    break;
                 case HELP:
                     logger.info(c.help());
                     break;
+
                 case INVALID:
                 default:
                     logger.error("Unknown Command");
@@ -144,16 +155,16 @@ public class Bayou {
     }
 
     public static void reconnectServer(int svrNum){
-        for(Integer sId : servers.keySet()){
-            if(sId != svrNum){
-                servers.get(sId).connectToYou(svrNum, serverport.get(svrNum));
+        for(ServerId sId : servers.keySet()){
+            if(sId.hrNumber != svrNum){
+                servers.get(sId).connectToYou(easyServers.get(svrNum), serverport.get(svrNum));
             }
         }
     }
 
     public static void startClient(int clNum, int svrNum){
         Client client = null;
-        Server server = servers.get(svrNum);
+        Server server = servers.get(easyServers.get(svrNum));
         if(!clients.containsKey(clNum) && server!=null){
             client = new Client(clNum, serverport.get(svrNum));
             clients.put(clNum, client);
@@ -170,13 +181,20 @@ public class Bayou {
             if(primaryServer == -1){
                 server.setPrimary(true);
                 primaryServer = svrNum;
+                server.setServerId(new ServerId(System.currentTimeMillis(), null, 0));
+                easyServers.put(svrNum, server.getServerId());
+            }else{
+                Write creationWrite = servers.get(easyServers.get(0)).addCreationWrite(svrNum);
+                server.updateServerIdentity(creationWrite, svrNum);
             }
-            servers.put(svrNum, server);
+            servers.put(server.getServerId(), server);
+            easyServers.put(svrNum, server.getServerId());
 
         }else{
             logger.error("Server number " + svrNum + " already running");
         }
     }
+
 }
 
 

@@ -16,7 +16,10 @@ public enum Commands {
     PAUSE("pause the script"),
     CONTINUE("continue the script"),
     PLAYLIST("<add|update|delete|read> <CLIENT_NO> the song"),
-    PRINTLOG("<i|> print log for node i or all the nodes if left blank.");
+    PRINTLOG("<i|> print log for node i or all the nodes if left blank."),
+    PRINTSID("Print server id"),
+    STARTENTROPY("Start entropy with "),
+    PRINTSERVERPLAYLIST("Print playlist at a server");
 
     private String description;
 

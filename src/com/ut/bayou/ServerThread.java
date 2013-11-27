@@ -13,7 +13,7 @@ public class ServerThread extends Thread {
     private Server pServer;
     private static Logger logger = Logger.getLogger("Server");
     private static boolean forClient = false;
-    private int connectedServerId;
+    private ServerId connectedServerId;
 
     public ServerThread(Server server, Socket sock) {
         this.sock = sock;
@@ -24,25 +24,29 @@ public class ServerThread extends Thread {
     public void run() {
         logger.debug("Server thread started by " + pServer);
 
-        try {
-            ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
 
-            while (true) {
+        ObjectInputStream in = null;
+        try {
+            in = new ObjectInputStream(sock.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        while (true) {
+            try {
                 Object line;
                 while ((line = in.readObject()) != null) {
                     logger.debug(line + " Message received");
-
                     deliver(line);
-                    setTimeoutForEntropy();
+                    //setTimeoutForEntropy();
                 }
+            } catch (SocketTimeoutException s) {
+                pServer.startEntropy();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
-        } catch (SocketTimeoutException s) {
-            pServer.startEntropy();
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-
         }
     }
 
@@ -60,6 +64,7 @@ public class ServerThread extends Thread {
             logger.debug(pServer + " Server ACK RECEIVED");
             ServerConnectAck cca = (ServerConnectAck) msg;
             pServer.addServerSocket(cca.srcId, sock);
+            pServer.setServerId(cca.serverId);
             connectedServerId = cca.srcId;
             forClient = false;
         } else if (msg instanceof RequestEntropyMessage) {
@@ -72,10 +77,11 @@ public class ServerThread extends Thread {
             pServer.startSendingEntropyResponse(sock, reqEntMsg);
         } else if (msg instanceof EntropyWriteMessage) {
             EntropyWriteMessage reqEntMsg = (EntropyWriteMessage) msg;
-            //pServer.startSendingEntropyResponse(sock, reqEntMsg);
+            pServer.processEntropyWriteMessage(reqEntMsg, sock);
 
-        } else {
-            logger.info(msg + " received");
+        } else if(msg instanceof EntropyFinishedAck){
+            EntropyFinishedAck efack = (EntropyFinishedAck) msg;
+            pServer.finalizeEntropySession(efack);
         }
 
     }

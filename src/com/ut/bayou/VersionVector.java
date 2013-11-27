@@ -2,31 +2,34 @@ package com.ut.bayou;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Scanner;
 
 public class VersionVector implements Serializable {
-    private HashMap<Integer, Long> vector;
+    private HashMap<ServerId, Long> vector;
 
     public VersionVector(){
-        vector = new HashMap<Integer, Long>();
+        vector = new HashMap<ServerId, Long>();
     }
 
-    public void addNewServerEntry(int serverId, long timestamp){
+    public void addNewServerEntry(ServerId serverId, long timestamp){
         vector.put(serverId, timestamp);
     }
 
-    public void updateMyAcceptStamp(int serverId, long newAcceptStamp){
-        vector.put(serverId, newAcceptStamp);
+    public void updateMyAcceptStamp(ServerId serverId, long newAcceptStamp){
+        if(vector.containsKey(serverId))
+            vector.put(serverId, newAcceptStamp);
+        else
+            System.err.println("Something is wrong with version vector.." + serverId.hrNumber);
     }
 
     public String strigify(){
+        System.out.println(this);
         String s = "";
         int k = 0;
-        for(Integer i : vector.keySet()){
+        for(ServerId i : vector.keySet()){
             if(k==0)
-                s +=  i + Constants.VVSPACE + vector.get(i);
+                s +=  i.hrNumber + Constants.VVSPACE + vector.get(i);
             else
-                s +=  Constants.SubDelimiter+""+i + Constants.VVSPACE+ vector.get(i);
+                s +=  Constants.SubDelimiter+""+i.hrNumber + Constants.VVSPACE+ vector.get(i);
             k++;
         }
         return s;
@@ -34,22 +37,9 @@ public class VersionVector implements Serializable {
 
     public String toString(){
         String s = "\nVersion Vector\n------------------\n";
-        for(Integer i : vector.keySet()){
-            s+= i + " " + vector.get(i) + "\n";
+        for(ServerId i : vector.keySet()){
+            s+= i.hrNumber + " " + vector.get(i) + "\n";
         }
         return s;
-    }
-
-    public static VersionVector unStringify(String s1){
-        s1 = s1.replaceAll("_"," ");        ;
-        String s[] = s1.split(Constants.SubDelimiter);
-        VersionVector vv = new VersionVector();
-
-        for(String t : s){
-        Scanner scanner = new Scanner(t);
-            if(scanner.hasNext())
-                vv.addNewServerEntry(Integer.parseInt(scanner.next()), scanner.nextLong());
-        }
-        return vv;
     }
 }

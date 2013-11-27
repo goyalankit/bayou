@@ -4,11 +4,10 @@ start client 0 0
 start client 1 1
 playlist 1 ADD yahooo yahoo.mp3
 playlist 0 ADD huadm2 huasdm.url
-playlist 0 read
 playlist 1 read
-printlog
 reconnect 1
 playlist 1 ADD sng ongs.url
-playlist 1 EDIT sng ongs.url
+playlist 1 EDIT sng ons.url
 printlog
 playlist 0 read
+playlist 1 read

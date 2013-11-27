@@ -26,6 +26,10 @@ public class Playlist {
         collection.remove(song);
     }
 
+    public void clear(){
+        collection.clear();
+    }
+
     public void printIt(){
         String s = "Playlist\n------------------";
         int counter = 1;
