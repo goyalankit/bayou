@@ -48,6 +48,7 @@ public class ServerThread extends Thread {
                     while ((line = in.readObject()) != null) {
                         logger.debug(line + " Message received");
                         deliver(line);
+                        setTimeoutForEntropy();
                     }
                 } catch (SocketTimeoutException s) {
                     pServer.startEntropy(); //START ENTROPY
@@ -74,7 +75,7 @@ public class ServerThread extends Thread {
             in.close();
             sock.close();
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
     }
 
@@ -121,7 +122,7 @@ public class ServerThread extends Thread {
 
             Random r = new Random();
             int timeout = r.nextInt(5000) + Constants.EntropyInverval;
-            logger.info(pServer + "Setting socket timeout to be " + timeout);
+            //logger.info(pServer + "Setting socket timeout to be " + timeout);
             sock.setSoTimeout(timeout);
         } catch (SocketException e) {
             logger.error("Socket exception");
