@@ -114,10 +114,17 @@ public class Bayou {
                     startServer(Integer.parseInt(s[1]));
                     break;
                 case RECONNECT:
-                    reconnectServer(Integer.parseInt(s[1]));
+                    if(s.length > 2)
+                        reconnectServer(Integer.parseInt(s[1]), Integer.parseInt(s[2]));
+                    else
+                        reconnectServer(Integer.parseInt(s[1]));
                     break;
                 case PLAYLIST:
-                    clients.get(Integer.parseInt(s[1])).executeUserCommand(s);
+                    Client cl = clients.get(Integer.parseInt(s[1]));
+                    if(cl!=null)
+                        cl.executeUserCommand(s);
+                    else
+                        logger.error("Client with this number doesn;t exist.");
                     break;
                 case PRINTLOG:
                     if(s.length > 1)
@@ -128,6 +135,17 @@ public class Bayou {
                     break;
                 case PRINTSID:
                     servers.get(easyServers.get(Integer.parseInt(s[1]))).printServerId();
+                    break;
+                case DUMMY:
+                    servers.get(easyServers.get(Integer.parseInt(s[1]))).dummy();
+                    break;
+                case PRINTCONNECTIONS:
+                    if(s.length > 1)
+                        servers.get(easyServers.get(Integer.parseInt(s[1]))).printConnections();
+                    else{
+                        for(Server server: servers.values())
+                            server.printConnections();
+                    }
                     break;
                 case EXIT:
                     logger.info("Exiting Bayou");
@@ -158,7 +176,7 @@ public class Bayou {
 
     private static void isolate(Integer sID)
     {
-        //servers.get(easyServers.get(sID)).isolate();
+        servers.get(easyServers.get(sID)).isolate();
     }
 
     public static void reconnectServer(int svrNum){
@@ -167,6 +185,10 @@ public class Bayou {
                 servers.get(sId).connectToYou(easyServers.get(svrNum), serverport.get(svrNum));
             }
         }
+    }
+
+    public static void reconnectServer(int firstServer, int secondServer){
+        servers.get(easyServers.get(firstServer)).connectToYou(easyServers.get(secondServer), serverport.get(secondServer));
     }
 
     public static void startClient(int clNum, int svrNum){

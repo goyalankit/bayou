@@ -199,18 +199,23 @@ public class Server{
         if(canEntropy){
             if(entropiedWith.size() == serverSockets.size())
                 entropiedWith.clear();
+
             for(ServerId sid : serverSockets.keySet()){
                 if(!entropiedWith.containsKey(sid)){
-                    logger.info(this + " starting entropy with server " + sid + " at " + serverSockets.get(sid).getPort());
+                    logger.info(this + " starting entropy with server " + sid.hrNumber + " at " + serverSockets.get(sid).getPort());
                     entropiedWith.put(sid,serverSockets.get(sid));
                     sendEntropyRequest(serverSockets.get(sid));
+                    break;
                 }
             }
         }
     }
 
     public synchronized void startEntropyWith(ServerId  serverId){
-        sendEntropyRequest(serverSockets.get(serverId));
+        if(serverSockets.containsKey(serverId))
+            sendEntropyRequest(serverSockets.get(serverId));
+        else
+            logger.error("Not Connected to the requested server");
     }
 
     //TODO currently sending everything! Send based on accept time stamps
@@ -218,10 +223,12 @@ public class Server{
     public synchronized void startSendingEntropyResponse(Socket sock, EntropyReceiverMessage entRcvMsg){
         ObjectOutputStream pout = outstreams.get(sock);
         seqNumber = 0;
-        logger.info(this+ " Received CSN " + entRcvMsg.csn + " My csn " + largestCSN);
+        logger.debug(this+ " Received CSN " + entRcvMsg.csn + " My csn " + largestCSN);
         if(entRcvMsg.csn < largestCSN){
             logger.debug(this+" Sending committed writes..");
             sendCommitedWrites(pout, entRcvMsg);
+        }{
+            logger.info(this+" no new committed writes to send");
         }
 
         sendTentativeWrites(pout, entRcvMsg);
@@ -236,6 +243,37 @@ public class Server{
 
     public synchronized void setCanEntropy(boolean can){
         canEntropy = can;
+    }
+
+    public synchronized void closeConnection(ServerId sid){
+        try {
+            logger.debug(this.serverId.hrNumber+" Removing " + sid.hrNumber);
+            Socket temp = serverSockets.remove(sid);
+            if(temp != null)
+            {
+                outstreams.remove(temp).close();
+                temp.close();
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void isolate(){
+        for(Socket sock : serverSockets.values())
+        {
+            try {
+                outstreams.get(sock).close();
+                sock.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        serverSockets.clear();
+        outstreams.clear();
     }
 
     private void sendTentativeWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg) {
@@ -272,11 +310,20 @@ public class Server{
 
     public synchronized void sendEntropyRequest(Socket socket){
         ObjectOutputStream pout = outstreams.get(socket);
+        if(pout == null)
+            logger.error(this+" not connected to "+socket.getPort());
         try {
             pout.writeObject((new RequestEntropyMessage(serverId)));
         }catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void dummy(){
+        String s = "";
+        for(Socket sock : outstreams.keySet())
+            s += " "+sock.getPort();
+
     }
 
     public synchronized void respondToEntropyRequest(Socket sock){
@@ -426,11 +473,22 @@ public class Server{
                 outstreams.put(sendSock, pout);
                 if(!versionVector.hasServerId(svrId))
                     versionVector.addNewServerEntry(svrId, 0);
-                new ServerThread(this, sendSock);
+                new ServerThread(this, sendSock, svrId);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void printConnections() {
+        logger.info("Server" + serverId.hrNumber  + " connections");
+        logger.info("Server Connections");
+        for(ServerId sID : serverSockets.keySet())
+            logger.info(sID.hrNumber + " -> " + " remote port: " + serverSockets.get(sID).getPort() + " local port " + serverSockets.get(sID).getLocalPort());
+        logger.info("Client Connections");
+        for(Integer sID : clientSockets.keySet())
+            logger.info(sID + " -> " + " remote port: " + clientSockets.get(sID).getPort() + " local port " + clientSockets.get(sID).getLocalPort());
+
     }
 
 

@@ -29,7 +29,6 @@ public class VersionVector implements Serializable {
     }
 
     public String strigify(){
-        System.out.println(this);
         String s = "";
         int k = 0;
         for(ServerId i : vector.keySet()){

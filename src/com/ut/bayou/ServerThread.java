@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.Random;
 
 public class ServerThread extends Thread {
     private Socket sock;
@@ -14,6 +15,7 @@ public class ServerThread extends Thread {
     private static Logger logger = Logger.getLogger("Server");
     private static boolean forClient = false;
     private ServerId connectedServerId;
+    ObjectInputStream in = null;
 
     public ServerThread(Server server, Socket sock) {
         this.sock = sock;
@@ -21,32 +23,58 @@ public class ServerThread extends Thread {
         start();
     }
 
+    public ServerThread(Server server, Socket sock, ServerId connectedServerId) {
+        this.sock = sock;
+        this.pServer = server;
+        this.connectedServerId = connectedServerId;
+        start();
+    }
+
     public void run() {
         logger.debug("Server thread started by " + pServer);
 
 
-        ObjectInputStream in = null;
+
         try {
             in = new ObjectInputStream(sock.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        while (true) {
-            try {
-                Object line;
-                while ((line = in.readObject()) != null) {
-                    logger.debug(line + " Message received");
-                    deliver(line);
+        try {
+            while (true) {
+                try {
+                    Object line;
+                    while ((line = in.readObject()) != null) {
+                        logger.debug(line + " Message received");
+                        deliver(line);
+                    }
+                } catch (SocketTimeoutException s) {
+                    pServer.startEntropy(); //START ENTROPY
                     setTimeoutForEntropy();
+                } catch (SocketException se) {
+                    //se.printStackTrace();
+                    break;
+                } catch (IOException e) {
+                    //e.printStackTrace();
+                    break;
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
-            } catch (SocketTimeoutException s) {
-                pServer.startEntropy();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
             }
+        } finally {
+            cleanUpAfterServer();
+            logger.error("SOCKET EXCEPTION");
+        }
+    }
+
+    public void cleanUpAfterServer(){
+        pServer.closeConnection(connectedServerId);
+        try {
+            in.close();
+            sock.close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 
@@ -59,6 +87,7 @@ public class ServerThread extends Thread {
             logger.debug(pServer + " Client ACK RECEIVED");
             ClientConnectAck cca = (ClientConnectAck) msg;
             pServer.addClientSocket(sock.getPort(), sock);
+            setTimeoutForEntropy();
             forClient = true;
         } else if (msg instanceof ServerConnectAck) {
             logger.debug(pServer + " Server ACK RECEIVED");
@@ -89,7 +118,11 @@ public class ServerThread extends Thread {
 
     private void setTimeoutForEntropy() {
         try {
-            sock.setSoTimeout(Constants.EntropyInverval);
+
+            Random r = new Random();
+            int timeout = r.nextInt(5000) + Constants.EntropyInverval;
+            logger.info(pServer + "Setting socket timeout to be " + timeout);
+            sock.setSoTimeout(timeout);
         } catch (SocketException e) {
             logger.error("Socket exception");
         }

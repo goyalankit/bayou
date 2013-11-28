@@ -20,7 +20,9 @@ public enum Commands {
     PRINTSID("Print server id"),
     STARTENTROPY("Start entropy with "),
     PRINTSERVERPLAYLIST("Print playlist at a server"),
-    ISOLATE("isolate a node");
+    ISOLATE("isolate a node"),
+    DUMMY("print log"),
+    PRINTCONNECTIONS("Print Connections");
 
     private String description;
 
