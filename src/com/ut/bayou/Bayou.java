@@ -91,6 +91,8 @@ public class Bayou {
                     else
                         c = Commands.INVALID;
                 }
+                if(runScript)
+                    System.out.println("COMMAND: "+input);
                 executeCommand(c, s);
             }
         }
@@ -98,9 +100,6 @@ public class Bayou {
 
     private static void executeCommand(Commands c, String[] s) {
         try {
-
-            if(runScript)
-                System.out.println("COMMAND: "+c);
 
             switch (c) {
                 case PING:
@@ -210,7 +209,7 @@ public class Bayou {
     }
 
     public static void reconnectClient(int clientNum, int serverNum){
-        clients.get(clientNum).reconnect(serverport.get(serverNum));
+        clients.get(clientNum).reconnect(serverport.get(serverNum), servers.get(easyServers.get(serverNum)));
     }
 
     public static void startServer(int svrNum){

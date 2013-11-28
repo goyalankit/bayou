@@ -87,6 +87,45 @@ class ClientConnectAck extends Message{ //Client acknowledges to server after co
     }
 }
 
+class ClientDisconnect extends Message{
+    int clientId;
+    ClientDisconnect(int clientId){
+        this.clientId = clientId;
+    }
+}
+
+class ClientDisconnectServerResponse extends Message{
+    long currentAcceptTime;
+    ClientDisconnectServerResponse(ServerId sid, long currentAcceptTime){
+        this.srcId = sid;
+        this.currentAcceptTime = currentAcceptTime;
+    }
+
+}
+
+class ServerDbStatus extends Message{
+    int clientId;
+    ServerId lastServer;
+    long lastAcceptedTimestamp;
+
+    ServerDbStatus (int clientId, ServerId lastServer, long lastAcceptedTimestamp){
+        this.clientId = clientId;
+        this.lastServer = lastServer;
+        this.lastAcceptedTimestamp = lastAcceptedTimestamp;
+    }
+}
+
+class ServerDbStatusResponse extends Message{
+    boolean updated;
+    Playlist playlist;
+    ServerDbStatusResponse (ServerId serverId, boolean updated, Playlist playlist){
+        this.srcId = serverId;
+        this.updated = updated;
+        this.playlist = playlist;
+    }
+}
+
+
 class UserAction extends Message{ //Client to server user action propagation message.
     String action;
     String song;

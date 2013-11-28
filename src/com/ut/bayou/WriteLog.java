@@ -34,10 +34,11 @@ public class WriteLog {
 
     @Override
     public String toString(){
-        String s = "";
+        String s = "CSN          |AcceptStamp   | Command | Song | URL";
         Iterator<Write> it = writes.iterator();
         while(it.hasNext()){
-            s += ""+it.next().stringify()+"\n"; //Todo add proper formatting here for viewing purposes.
+            Write w = it.next();
+            s += "\n"+ w.csn + " "+ w.acceptStamp + " " + w.command + " " + w.song + " " + w.url;
         }
         return s;
     }

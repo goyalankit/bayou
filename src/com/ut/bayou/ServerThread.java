@@ -122,6 +122,14 @@ public class ServerThread extends Thread {
         } else if(msg instanceof EntropyFinishedAck){
             EntropyFinishedAck efack = (EntropyFinishedAck) msg;
             pServer.finalizeEntropySession(efack);
+        } else if(msg instanceof ClientDisconnect){
+            logger.info("Client Disconnect Request Received");
+            ClientDisconnect clientDisconnect = (ClientDisconnect) msg;
+            pServer.respondToClientDisconnect(clientDisconnect);
+        } else if(msg instanceof ServerDbStatus){
+            logger.info("Client Requesting status");
+            ServerDbStatus sdstatus = (ServerDbStatus) msg;
+            pServer.respondWithStatus(sdstatus);
         }
 
     }

@@ -1,0 +1,21 @@
+join 0
+start client 0 0
+playlist 0 add first first
+join 1
+isolate 1
+playlist 0 add second second
+disconnectclient 0
+reconnectclient 0 1
+printserverplaylist 1
+playlist 0 read
+reconnect 1
+playlist 0 read
+playlist 0 add something somethingweird
+printserverplaylist 1
+startentropy 0 1
+playlist 0 read
+startentropy 1 0
+playlist 0 read
+printserverplaylist 0
+printserverplaylist 1
+exit

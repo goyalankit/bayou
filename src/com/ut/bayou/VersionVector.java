@@ -24,6 +24,10 @@ public class VersionVector implements Serializable {
         }
     }
 
+    public synchronized long getLatestStamp(ServerId sid){
+        return vector.get(sid);
+    }
+
     public boolean hasServerId(ServerId sid){
         return vector.containsKey(sid);
     }

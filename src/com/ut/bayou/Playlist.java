@@ -2,11 +2,12 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Playlist {
+public class Playlist implements Serializable{
     private Map<String, String> collection;
     private static Logger logger = Logger.getLogger("Playlist");
 

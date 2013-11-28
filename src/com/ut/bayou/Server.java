@@ -69,7 +69,7 @@ public class Server{
             e.printStackTrace();
         }
 
-        EntropyThread entropyThread = new EntropyThread();
+        //EntropyThread entropyThread = new EntropyThread();
 
         Runnable listener = new Runnable()
         {
@@ -90,7 +90,7 @@ public class Server{
                 socket = rcvSock.accept();
                 logger.info(this+" connection accepted at "+socket.getPort());
                 ObjectOutputStream pout= new ObjectOutputStream(socket.getOutputStream());
-                pout.writeObject(new String("Hello from " + this));
+                //pout.writeObject(new String("Hello from " + this));
                 logger.debug("Sent the message. Will listen now.");
                 outstreams.put(socket, pout);
 
@@ -481,11 +481,14 @@ public class Server{
 
     public void printLog(){
         String logstring = "";
-        logstring = this + "$ logs\n"+
-                "---------------------------\n"+
-                "Tentative Writes number " + tentativeWrites.size() +
-                "\nCommited Writes number " + committedWrites.size() + "\n";
-        logstring += " VV "+ versionVector;
+        logstring = this + "$ logs\n";
+        logstring+="---------------------------\n";
+        logstring += "Tentative Writes number " + tentativeWrites.size();
+        logstring += "\n"+tentativeWrites;
+        logstring+="\n---------------------------\n";
+        logstring += "\nCommited Writes number " + committedWrites.size();
+        logstring += "\n"+committedWrites;
+        logstring += versionVector;
 
         logger.info(logstring);
     }
@@ -520,6 +523,39 @@ public class Server{
 
     }
 
+
+    public synchronized void respondToClientDisconnect(ClientDisconnect clDisconnect){
+        Socket sock = clientSockets.get(clDisconnect.clientId);
+        if(sock!=null){
+            ObjectOutputStream oout = outstreams.get(sock);
+            try {
+                logger.info(this+" responding to client disconnect");
+                oout.writeObject(new ClientDisconnectServerResponse(serverId, versionVector.getLatestStamp(serverId)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public synchronized void respondWithStatus(ServerDbStatus sbdStatus){
+        logger.info("CLIENT ID/PORT " + sbdStatus.clientId);
+        Socket sock = clientSockets.get(sbdStatus.clientId);
+        if(sock!=null){
+            ObjectOutputStream oout = outstreams.get(sock);
+            try {
+                logger.info(this+" responding to Server Status");
+                if(versionVector.getLatestStamp(sbdStatus.lastServer) >= sbdStatus.lastAcceptedTimestamp){
+                    oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                }
+                else{
+                    oout.writeObject(new ServerDbStatusResponse(serverId, false, null));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public ServerId getServerId() {
         return serverId;
