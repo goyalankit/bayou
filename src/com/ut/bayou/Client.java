@@ -2,9 +2,7 @@ package com.ut.bayou;
 
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -16,11 +14,15 @@ public class Client {
     private ObjectInputStream instream;
     private static Logger logger = Logger.getLogger("Client");
     private Playlist localPlaylist; //to ensure read your write property. How to make sure that it is updated?
+    private Server previousServer;
+    private Server currentServer;
+    private long timeOfLastDisconnect;
 
-    public Client(int clientId, int port){
+    public Client(int clientId, int port, Server server){
         this.clientId = clientId;
         this.port = port;
         this.localPlaylist = new Playlist();
+        this.currentServer = server;
         connect();
     }
 
@@ -29,7 +31,7 @@ public class Client {
             sock = new Socket("localhost", port);
             outstream = new ObjectOutputStream(sock.getOutputStream());
             instream = new ObjectInputStream(sock.getInputStream());
-            outstream.writeObject((new ClientConnectAck()));
+            outstream.writeObject((new ClientConnectAck(clientId)));
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -47,6 +49,49 @@ public class Client {
         else
             printPlaylist();
     }
+
+    public void disconnect() {
+        previousServer = currentServer;
+        currentServer  = null;
+        timeOfLastDisconnect = System.currentTimeMillis();
+        try {
+            outstream.writeObject(new String("client disconnecting"));
+            outstream.close();
+            instream.close();
+            sock.close();
+            sock = null;
+            outstream = null;
+            instream = null;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (NullPointerException e)
+        {
+            System.out.println("Disconnection error in client " + clientId);
+        }
+    }
+
+    public void reconnect(int port)
+    {
+        if(sock != null)
+        {
+            System.out.println("Request failed, client already connected.");
+        }
+        else
+        {
+            try {
+                sock = new Socket("localhost", port);
+                outstream = new ObjectOutputStream(sock.getOutputStream());
+                instream = new ObjectInputStream(sock.getInputStream());
+                outstream.writeObject((new ClientConnectAck(clientId)));
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     public void addPlaylist(String song, String url) throws IOException {
         localPlaylist.add(song, url);

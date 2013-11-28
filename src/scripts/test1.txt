@@ -1,6 +1,21 @@
 join 0
 join 1
 join 2
+start client 0 0
+start client 1 1
+playlist 0 add song song.mp3
+playlist 0 add hello hello.mp3
+startentropy 0 1
+isolate 1
+playlist 0 add isol isol.mp3
+disconnectclient 0
+reconnectclient 0 1
+disconnectclient 1
+reconnectclient 1 0
+playlist 0 read
+printserverplaylist 1
+printconnections
+playlist 0 read
 reconnect 1
-reconnect 2
-isolate 2
+printconnections 1
+playlist 0 read

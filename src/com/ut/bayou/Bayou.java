@@ -119,6 +119,9 @@ public class Bayou {
                     else
                         reconnectServer(Integer.parseInt(s[1]));
                     break;
+                case RECONNECTCLIENT:
+                    reconnectClient(Integer.parseInt(s[1]), Integer.parseInt(s[2]));
+                    break;
                 case PLAYLIST:
                     Client cl = clients.get(Integer.parseInt(s[1]));
                     if(cl!=null)
@@ -156,6 +159,10 @@ public class Bayou {
                     break;
                 case ISOLATE:
                     isolate(Integer.parseInt(s[1]));
+                    break;
+                case DISCONNECTCLIENT:
+                    clients.get(Integer.parseInt(s[1])).disconnect();
+                    break;
                 case PRINTSERVERPLAYLIST:
                     servers.get(easyServers.get(Integer.parseInt(s[1]))).printServerPlaylist();
                     break;
@@ -195,11 +202,15 @@ public class Bayou {
         Client client = null;
         Server server = servers.get(easyServers.get(svrNum));
         if(!clients.containsKey(clNum) && server!=null){
-            client = new Client(clNum, serverport.get(svrNum));
+            client = new Client(clNum, serverport.get(svrNum), server);
             clients.put(clNum, client);
         }else{
             logger.error("Client already running");
         }
+    }
+
+    public static void reconnectClient(int clientNum, int serverNum){
+        clients.get(clientNum).reconnect(serverport.get(serverNum));
     }
 
     public static void startServer(int svrNum){

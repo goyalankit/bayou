@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 
 public class Server{
     private int secServerId;
@@ -37,6 +38,7 @@ public class Server{
     private HashMap<ServerId, Socket> entropiedWith;
 
     private static Logger logger;
+    long nextTimeOut;
 
     public Server(int serverId, int port) {
         this.secServerId = serverId;
@@ -66,6 +68,8 @@ public class Server{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        EntropyThread entropyThread = new EntropyThread();
 
         Runnable listener = new Runnable()
         {
@@ -218,12 +222,17 @@ public class Server{
             logger.error("Not Connected to the requested server");
     }
 
+    public synchronized Socket getServerSockets(ServerId sid) {
+        return serverSockets.get(sid);
+    }
+
+
     //TODO currently sending everything! Send based on accept time stamps
 
     public synchronized void startSendingEntropyResponse(Socket sock, EntropyReceiverMessage entRcvMsg){
         ObjectOutputStream pout = outstreams.get(sock);
         seqNumber = 0;
-        logger.debug(this+ " Received CSN " + entRcvMsg.csn + " My csn " + largestCSN);
+        logger.debug(this + " Received CSN " + entRcvMsg.csn + " My csn " + largestCSN);
         if(entRcvMsg.csn < largestCSN){
             logger.debug(this+" Sending committed writes..");
             sendCommitedWrites(pout, entRcvMsg);
@@ -255,7 +264,23 @@ public class Server{
                 temp.close();
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            //e.printStackTrace();
+        }
+    }
+
+
+    public synchronized void closeConnectionForClient(int clientNum){
+        try {
+            logger.info(this.serverId.hrNumber + " Removing Client " + clientNum + " client sockets size " + clientSockets.size());
+
+            Socket temp = clientSockets.remove(clientNum);
+            logger.info(this.serverId.hrNumber+" Removing Client " + clientNum + " client sockets size "+clientSockets.size());
+            if(temp != null)
+            {
+                outstreams.remove(temp).close();
+                temp.close();
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -264,7 +289,7 @@ public class Server{
         for(Socket sock : serverSockets.values())
         {
             try {
-                outstreams.get(sock).close();
+                outstreams.remove(sock).close();
                 sock.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -273,7 +298,7 @@ public class Server{
         }
 
         serverSockets.clear();
-        outstreams.clear();
+        //outstreams.clear();
     }
 
     private void sendTentativeWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg) {
@@ -314,8 +339,12 @@ public class Server{
             logger.error(this+" not connected to "+socket.getPort());
         try {
             pout.writeObject((new RequestEntropyMessage(serverId)));
-        }catch (IOException e) {
-            e.printStackTrace();
+
+        }catch (SocketException ss){
+            logger.error("Socket Exception");
+        }
+        catch (IOException e) {
+         //   e.printStackTrace();
         }
     }
 
@@ -481,7 +510,7 @@ public class Server{
     }
 
     public void printConnections() {
-        logger.info("Server" + serverId.hrNumber  + " connections");
+        logger.info("Server" + serverId.hrNumber + " connections");
         logger.info("Server Connections");
         for(ServerId sID : serverSockets.keySet())
             logger.info(sID.hrNumber + " -> " + " remote port: " + serverSockets.get(sID).getPort() + " local port " + serverSockets.get(sID).getLocalPort());
@@ -511,6 +540,36 @@ public class Server{
     public String toString(){
         return "Server "+ secServerId +" at "+port+" : ";
     }
+
+    class EntropyThread extends Thread{
+        boolean keepEntropyLive;
+        public EntropyThread(){
+            logger.info("Entropy thread initialized for "+secServerId);
+            nextTimeOut = System.currentTimeMillis() + Constants.EntropyInverval;
+            keepEntropyLive = true;
+            start();
+        }
+
+        public void run() {
+            while (keepEntropyLive) {
+                Random r = new Random();
+                nextTimeOut = System.currentTimeMillis() + Constants.EntropyInverval + r.nextInt(5000) ;
+                while (nextTimeOut > System.currentTimeMillis()) {
+                    yield();
+                }
+                try {
+                    startEntropy();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void kill(){
+            keepEntropyLive = false;
+        }
+    }
+
 }
 
 

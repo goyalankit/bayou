@@ -77,8 +77,9 @@ class ServerConnectAck extends Message{  //Server acknowledges to client after c
 }
 
 class ClientConnectAck extends Message{ //Client acknowledges to server after connecting
-    ClientConnectAck() {
-        //this.srcId = sId;
+    int clientId;
+    ClientConnectAck(int clientId) {
+        this.clientId = clientId;
     }
 
     public String toString(){

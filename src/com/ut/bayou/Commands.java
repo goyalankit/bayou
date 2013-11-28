@@ -22,7 +22,9 @@ public enum Commands {
     PRINTSERVERPLAYLIST("Print playlist at a server"),
     ISOLATE("isolate a node"),
     DUMMY("print log"),
-    PRINTCONNECTIONS("Print Connections");
+    PRINTCONNECTIONS("Print Connections"),
+    DISCONNECTCLIENT("disconnect client"),
+    RECONNECTCLIENT("reconnect client");
 
     private String description;
 
