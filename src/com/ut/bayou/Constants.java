@@ -20,5 +20,8 @@ public abstract class Constants {
     public static final String VVSPACE = "_";
     public static final int INFINITY = -1;
     public static final String CREATIONWRITE = "CREATIONWRITE";
+    public static final String RETIREMENTWRITE = "RETIREMENTWRITE";
+    public static final String PRIMARY = "PRIMARY";
+    public static final String SECONDARY = "SECONDARY";
 
 }

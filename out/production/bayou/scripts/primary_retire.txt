@@ -1,0 +1,29 @@
+join 0
+join 1
+join 2
+isolate 1
+isolate 2
+start client 0 0
+playlist 0 add song song.mp3
+playlist 0 add song2 song2.mp3
+reconnect 0 1
+startentropy 0 1
+isolate 1
+playlist 0 add lastwrite lastwrite.p3
+reconnect 2 0
+retire 0
+reconnect 2 1
+startentropy 2 1
+printlog
+printconnections
+start client 1 1
+playlist 1 add mysong mysong.mp3
+printlog
+printserverplaylist 2
+printserverplaylist 1
+startentropy 1 2
+printserverplaylist 2
+printserverplaylist 1
+printlog
+join 4
+

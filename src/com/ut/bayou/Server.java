@@ -30,12 +30,16 @@ public class Server{
     private WriteLog committedWrites;
 
     private VersionVector versionVector;
+    private boolean retired;
 
     private boolean isPrimary;
     private long largestCSN;
 
     private boolean canEntropy;
     private HashMap<ServerId, Socket> entropiedWith;
+    private static EntropyThread entropyThread;
+
+    private int newPrimary;
 
     private static Logger logger;
     long nextTimeOut;
@@ -56,9 +60,11 @@ public class Server{
         this.largestCSN = 0;
         this.canEntropy = true;
         this.serverId = null;
+        this.retired = false;
         this.entropiedWith = new HashMap<ServerId, Socket>();
         logger = Logger.getLogger("Server");
         initializeServer();
+        this.newPrimary = 0;
     }
 
     public void initializeServer(){
@@ -69,7 +75,7 @@ public class Server{
             e.printStackTrace();
         }
 
-        //EntropyThread entropyThread = new EntropyThread();
+         entropyThread = new EntropyThread();
 
         Runnable listener = new Runnable()
         {
@@ -83,7 +89,7 @@ public class Server{
     }
 
     public void startListening(){
-        while(true){
+        while(!retired){
             Socket socket;
             try {
                 logger.info(this+" listening for messages.");
@@ -185,6 +191,8 @@ public class Server{
     }
 
     private void acceptWrite(String song, String url, String action) {
+        if(retired)
+            return;
         long acceptStamp = System.currentTimeMillis();
 
         if(isPrimary){
@@ -243,7 +251,7 @@ public class Server{
         sendTentativeWrites(pout, entRcvMsg);
 
         try {
-            pout.writeObject(new EntropyFinishedAck(serverId, seqNumber));
+            pout.writeObject(new EntropyFinished(serverId, seqNumber));
             setCanEntropy(true);
         } catch (IOException e) {
             e.printStackTrace();
@@ -298,7 +306,6 @@ public class Server{
         }
 
         serverSockets.clear();
-        //outstreams.clear();
     }
 
     private void sendTentativeWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg) {
@@ -307,8 +314,12 @@ public class Server{
 
         while (it.hasNext()){
             writeToSend = it.next();
-            sendEntropyWrite(pout, writeToSend);
-            seqNumber++;
+            if(!entRcvMsg.VV.hasServerId(writeToSend.sId) || (entRcvMsg.VV.hasServerId(writeToSend.sId) && writeToSend.acceptStamp > entRcvMsg.VV.getLatestStamp(writeToSend.sId))){
+                sendEntropyWrite(pout, writeToSend);
+                seqNumber++;
+            }else{
+
+            }
         }
     }
 
@@ -325,7 +336,7 @@ public class Server{
 
     public synchronized void sendEntropyWrite(ObjectOutputStream pout, Write w){
         try {
-            logger.info("Sending entropy write. "+ w.command);
+            logger.info("Sending entropy write. " + w.command);
             pout.writeObject((new EntropyWriteMessage(serverId, w, seqNumber)));
         } catch (IOException e) {
             e.printStackTrace();
@@ -388,7 +399,7 @@ public class Server{
         }
     }
 
-    public synchronized void finalizeEntropySession(EntropyFinishedAck efAck){
+    public synchronized void finalizeEntropySession(EntropyFinished efAck){
         numEntropyWrites = efAck.numOfMessages;
 
         while(entropyWrites.size() != numEntropyWrites) {
@@ -428,8 +439,17 @@ public class Server{
 
             entropyWrites.clear();
             numEntropyWrites = Integer.MAX_VALUE;
+
+            //Inform other server to do its thing
+            ObjectOutputStream serOut =  outstreams.get(serverSockets.get(efAck.srcId));
+            try {
+                serOut.writeObject(new EntropyFinishedAck(serverId));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             reCreatePlaylist();
         }
+
     }
 
     public synchronized void reCreatePlaylist(){
@@ -440,6 +460,8 @@ public class Server{
             Write w = it.next();
             if(w.command.startsWith("CREATION")){
                 processCreationWrite(w);
+            }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
+                processRetirementWrite(w);
             }
             processWrite(w.song, w.url, w.command);
         }
@@ -449,11 +471,24 @@ public class Server{
             Write w = it.next();
             if(w.command.startsWith("CREATION")){
                 processCreationWrite(w);
+            }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
+                processRetirementWrite(w);
             }
             processWrite(w.song, w.url, w.command);
         }
 
          canEntropy = true;
+    }
+
+    private void processRetirementWrite(Write w){
+        if(w.command.contains(Constants.PRIMARY)){
+            isPrimary = true;
+
+            w.command = Constants.RETIREMENTWRITE+":"+Constants.SECONDARY;
+            versionVector.remove(w.sId);
+        }else{
+            versionVector.remove(w.sId);
+        }
     }
 
     private void processCreationWrite(Write w) {
@@ -466,6 +501,16 @@ public class Server{
             if(!versionVector.hasServerId(newServerId)){
                 versionVector.addNewServerEntry(newServerId, w.acceptStamp);
             }
+        }
+    }
+
+    public void entropyFinishedAck(EntropyFinishedAck entropyFinishedAck){
+        if(retired){
+            isolate();
+            entropyThread.kill();
+            logger.debug("The new primary that I chose "+entropyFinishedAck.srcId.hrNumber);
+            newPrimary = entropyFinishedAck.srcId.hrNumber;
+            Bayou.setPrimaryServer(newPrimary);
         }
     }
 
@@ -535,7 +580,31 @@ public class Server{
                 e.printStackTrace();
             }
         }
+    }
 
+    public synchronized int retire() {
+        this.retired = true;
+
+        long acceptStamp = System.currentTimeMillis();
+        Write retirementWrite;
+        if(isPrimary)
+        {
+            largestCSN = Math.max(acceptStamp, largestCSN+1);
+            retirementWrite = new Write(acceptStamp, largestCSN, serverId, isPrimary, Constants.RETIREMENTWRITE+":"+Constants.PRIMARY, null, null);
+            committedWrites.addToLog(retirementWrite);
+        }
+        else
+        {
+            logger.info("Adding retirement write to log!");
+            printLog();
+            retirementWrite = new Write(acceptStamp, largestCSN, serverId, isPrimary, Constants.RETIREMENTWRITE+":"+Constants.SECONDARY, null, null);
+            tentativeWrites.addToLog(retirementWrite);
+        }
+        versionVector.updateAcceptStamp(serverId, acceptStamp);
+
+        startEntropy();
+
+        return newPrimary;
     }
 
     public synchronized void respondWithStatus(ServerDbStatus sbdStatus){
@@ -565,6 +634,7 @@ public class Server{
         playlist.printIt();
     }
 
+    //make the first server to join a primary and assign a server id
     public void setPrimary(boolean primary) {
         isPrimary = primary;
         if(this.serverId == null){

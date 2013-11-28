@@ -121,6 +121,9 @@ public class Bayou {
                 case RECONNECTCLIENT:
                     reconnectClient(Integer.parseInt(s[1]), Integer.parseInt(s[2]));
                     break;
+                case RETIRE:
+                    retire(s[1]);
+                    break;
                 case PLAYLIST:
                     Client cl = clients.get(Integer.parseInt(s[1]));
                     if(cl!=null)
@@ -180,6 +183,14 @@ public class Bayou {
         }
     }
 
+    private static void retire(String s) {
+        int svrNum = Integer.parseInt(s);
+        servers.get(easyServers.get(svrNum)).retire();
+        if(easyServers.containsKey(svrNum)){
+            serverport.remove(servers.remove(easyServers.remove(svrNum)));
+        }
+    }
+
     private static void isolate(Integer sID)
     {
         servers.get(easyServers.get(sID)).isolate();
@@ -192,6 +203,7 @@ public class Bayou {
             }
         }
     }
+
 
     public static void reconnectServer(int firstServer, int secondServer){
         servers.get(easyServers.get(firstServer)).connectToYou(easyServers.get(secondServer), serverport.get(secondServer));
@@ -223,16 +235,17 @@ public class Bayou {
                 server.setServerId(new ServerId(System.currentTimeMillis(), null, 0));
                 easyServers.put(svrNum, server.getServerId());
             }else{
-                Write creationWrite = servers.get(easyServers.get(0)).addCreationWrite(svrNum);
+                logger.debug("Current Primary server is " + primaryServer);
+                Write creationWrite = servers.get(easyServers.get(primaryServer)).addCreationWrite(svrNum);
                 server.updateServerIdentity(creationWrite, svrNum);
             }
             servers.put(server.getServerId(), server);
             easyServers.put(svrNum, server.getServerId());
 
             if(primaryServer != svrNum){
-                servers.get(easyServers.get(0)).connectToYou(easyServers.get(svrNum), serverport.get(svrNum));
+                servers.get(easyServers.get(primaryServer)).connectToYou(easyServers.get(svrNum), serverport.get(svrNum));
                 //reconnectServer(svrNum);
-                servers.get(easyServers.get(0)).startEntropyWith(server.getServerId());
+                servers.get(easyServers.get(primaryServer)).startEntropyWith(server.getServerId());
             }
 
         }else{
@@ -240,6 +253,10 @@ public class Bayou {
         }
     }
 
+    public static void setPrimaryServer(int primaryServer) {
+        logger.debug("The new primary is now "+primaryServer);
+        Bayou.primaryServer = primaryServer;
+    }
 }
 
 

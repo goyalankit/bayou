@@ -55,14 +55,22 @@ class EntropyReceiverMessage extends Message{ //Send your version vector after e
     }
 }
 
-class EntropyFinishedAck extends Message{
+class EntropyFinished extends Message{
     int numOfMessages;
 
-    EntropyFinishedAck(ServerId sId, int numOfMessages) {
+    EntropyFinished(ServerId sId, int numOfMessages) {
         this.srcId = sId;
         this.numOfMessages = numOfMessages;
     }
 }
+
+class EntropyFinishedAck extends Message{
+
+    EntropyFinishedAck(ServerId sId) {
+        this.srcId = sId;
+    }
+}
+
 
 class ServerConnectAck extends Message{  //Server acknowledges to client after connecting
     ServerId serverId;

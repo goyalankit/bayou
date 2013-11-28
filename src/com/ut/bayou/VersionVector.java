@@ -28,6 +28,11 @@ public class VersionVector implements Serializable {
         return vector.get(sid);
     }
 
+    public synchronized void remove(ServerId sid){
+        vector.remove(sid);
+    }
+
+
     public boolean hasServerId(ServerId sid){
         return vector.containsKey(sid);
     }

@@ -24,7 +24,8 @@ public enum Commands {
     DUMMY("print log"),
     PRINTCONNECTIONS("Print Connections"),
     DISCONNECTCLIENT("disconnect client"),
-    RECONNECTCLIENT("reconnect client");
+    RECONNECTCLIENT("reconnect client"),
+    RETIRE("retire a node");
 
     private String description;
 

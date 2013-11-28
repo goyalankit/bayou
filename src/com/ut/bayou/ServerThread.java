@@ -119,8 +119,8 @@ public class ServerThread extends Thread {
             EntropyWriteMessage reqEntMsg = (EntropyWriteMessage) msg;
             pServer.processEntropyWriteMessage(reqEntMsg, sock);
 
-        } else if(msg instanceof EntropyFinishedAck){
-            EntropyFinishedAck efack = (EntropyFinishedAck) msg;
+        } else if(msg instanceof EntropyFinished){
+            EntropyFinished efack = (EntropyFinished) msg;
             pServer.finalizeEntropySession(efack);
         } else if(msg instanceof ClientDisconnect){
             logger.info("Client Disconnect Request Received");
@@ -130,6 +130,9 @@ public class ServerThread extends Thread {
             logger.info("Client Requesting status");
             ServerDbStatus sdstatus = (ServerDbStatus) msg;
             pServer.respondWithStatus(sdstatus);
+        } else if(msg instanceof EntropyFinishedAck){
+            EntropyFinishedAck entFinAck = (EntropyFinishedAck) msg;
+            pServer.entropyFinishedAck(entFinAck);
         }
 
     }
