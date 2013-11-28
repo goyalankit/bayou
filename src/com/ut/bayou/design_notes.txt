@@ -33,3 +33,7 @@ Client sends request to a server..a new server thread is launched. Client can no
 
 Only one playlist maintained at each server. need to synchronize properly in case of multiple clients.
 
+
+NEW SERVER JOIN:
+
+A new server first sends a write to one of the server(0: primary in our case). It performs an anti-antropy with the server once.

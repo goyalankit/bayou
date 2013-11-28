@@ -136,6 +136,8 @@ public class Bayou {
                 case STARTENTROPY:
                     servers.get(easyServers.get(Integer.parseInt(s[1]))).startEntropyWith(easyServers.get(Integer.parseInt(s[2])));
                     break;
+                case ISOLATE:
+                    isolate(Integer.parseInt(s[1]));
                 case PRINTSERVERPLAYLIST:
                     servers.get(easyServers.get(Integer.parseInt(s[1]))).printServerPlaylist();
                     break;
@@ -152,6 +154,11 @@ public class Bayou {
             e.printStackTrace();
             logger.error("Invalid Command");
         }
+    }
+
+    private static void isolate(Integer sID)
+    {
+        //servers.get(easyServers.get(sID)).isolate();
     }
 
     public static void reconnectServer(int svrNum){

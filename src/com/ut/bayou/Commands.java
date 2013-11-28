@@ -19,7 +19,8 @@ public enum Commands {
     PRINTLOG("<i|> print log for node i or all the nodes if left blank."),
     PRINTSID("Print server id"),
     STARTENTROPY("Start entropy with "),
-    PRINTSERVERPLAYLIST("Print playlist at a server");
+    PRINTSERVERPLAYLIST("Print playlist at a server"),
+    ISOLATE("isolate a node");
 
     private String description;
 

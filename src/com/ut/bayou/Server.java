@@ -19,6 +19,7 @@ public class Server{
     private HashMap<Integer, Socket> clientSockets; //client port -> socket
     private HashMap<Socket, ObjectOutputStream> outstreams;  //socket -> output stream; all the outstreams. both server and client.
     private HashMap<ServerId, Socket> serverSockets; //server number -> socket
+    private Integer totalServersConnectedTo;
 
     private HashMap<Integer, Write> entropyWrites;
     private Integer numEntropyWrites;
@@ -40,6 +41,8 @@ public class Server{
     public Server(int serverId, int port) {
         this.secServerId = serverId;
         this.port = port;
+        this.totalServersConnectedTo = 0;
+
         this.playlist = new Playlist();
         this.outstreams = new HashMap<Socket, ObjectOutputStream>();
         this.clientSockets = new HashMap<Integer, Socket>();
@@ -106,7 +109,7 @@ public class Server{
         long acceptTime = System.currentTimeMillis();
         if(isPrimary){
             largestCSN = Math.max(acceptTime, largestCSN+1);
-            creationWrite = new Write(acceptTime, largestCSN++, serverId, isPrimary, Constants.CREATIONWRITE+":"+svrNum, null,null);
+            creationWrite = new Write(acceptTime, largestCSN, serverId, isPrimary, Constants.CREATIONWRITE+":"+svrNum, null,null);
             committedWrites.addToLog(creationWrite);
 
             ServerId otherId = new ServerId(acceptTime, serverId, svrNum);
@@ -199,6 +202,7 @@ public class Server{
             for(ServerId sid : serverSockets.keySet()){
                 if(!entropiedWith.containsKey(sid)){
                     logger.info(this + " starting entropy with server " + sid + " at " + serverSockets.get(sid).getPort());
+                    entropiedWith.put(sid,serverSockets.get(sid));
                     sendEntropyRequest(serverSockets.get(sid));
                 }
             }
@@ -224,9 +228,14 @@ public class Server{
 
         try {
             pout.writeObject(new EntropyFinishedAck(serverId, seqNumber));
+            setCanEntropy(true);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public synchronized void setCanEntropy(boolean can){
+        canEntropy = can;
     }
 
     private void sendTentativeWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg) {
@@ -265,7 +274,7 @@ public class Server{
         ObjectOutputStream pout = outstreams.get(socket);
         try {
             pout.writeObject((new RequestEntropyMessage(serverId)));
-        } catch (IOException e) {
+        }catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -400,6 +409,7 @@ public class Server{
                 "---------------------------\n"+
                 "Tentative Writes number " + tentativeWrites.size() +
                 "\nCommited Writes number " + committedWrites.size() + "\n";
+        logstring += " VV "+ versionVector;
 
         logger.info(logstring);
     }

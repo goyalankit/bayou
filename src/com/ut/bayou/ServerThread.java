@@ -38,7 +38,7 @@ public class ServerThread extends Thread {
                 while ((line = in.readObject()) != null) {
                     logger.debug(line + " Message received");
                     deliver(line);
-                    //setTimeoutForEntropy();
+                    setTimeoutForEntropy();
                 }
             } catch (SocketTimeoutException s) {
                 pServer.startEntropy();
@@ -74,6 +74,7 @@ public class ServerThread extends Thread {
         } else if (msg instanceof EntropyReceiverMessage) {
             logger.debug(pServer + " Entropy Response Received");
             EntropyReceiverMessage reqEntMsg = (EntropyReceiverMessage) msg;
+            pServer.setCanEntropy(false);
             pServer.startSendingEntropyResponse(sock, reqEntMsg);
         } else if (msg instanceof EntropyWriteMessage) {
             EntropyWriteMessage reqEntMsg = (EntropyWriteMessage) msg;
@@ -90,7 +91,7 @@ public class ServerThread extends Thread {
         try {
             sock.setSoTimeout(Constants.EntropyInverval);
         } catch (SocketException e) {
-            e.printStackTrace();
+            logger.error("Socket exception");
         }
     }
 
