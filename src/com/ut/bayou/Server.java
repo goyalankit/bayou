@@ -508,7 +508,7 @@ public class Server{
         if(retired){
             isolate();
             entropyThread.kill();
-            logger.debug("The new primary that I chose "+entropyFinishedAck.srcId.hrNumber);
+            logger.debug("The new primary that I chose " + entropyFinishedAck.srcId.hrNumber);
             newPrimary = entropyFinishedAck.srcId.hrNumber;
             Bayou.setPrimaryServer(newPrimary);
         }
@@ -610,7 +610,7 @@ public class Server{
     public synchronized void respondWithStatus(ServerDbStatus sbdStatus){
         logger.info("CLIENT ID/PORT " + sbdStatus.clientId);
         Socket sock = clientSockets.get(sbdStatus.clientId);
-        if(sock!=null){
+        if(sock!=null && sbdStatus.lastAcceptedTimestamp != -1){
             ObjectOutputStream oout = outstreams.get(sock);
             try {
                 logger.info(this+" responding to Server Status");
@@ -620,6 +620,13 @@ public class Server{
                 else{
                     oout.writeObject(new ServerDbStatusResponse(serverId, false, null));
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if(sock!=null && sbdStatus.lastAcceptedTimestamp == -1){
+                ObjectOutputStream oout = outstreams.get(sock);
+            try {
+                oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
             } catch (IOException e) {
                 e.printStackTrace();
             }

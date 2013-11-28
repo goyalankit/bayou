@@ -109,30 +109,42 @@ public class Client {
     public void addPlaylist(String song, String url) throws IOException {
         localPlaylist.add(song, url);
         outstream.writeObject((new UserAction(this.clientId, Constants.ADD, song, url)));
-        checkServerStatus();
+        checkServerStatus(false);
     }
     public void editPlaylist(String song, String url) throws IOException{
         localPlaylist.edit(song, url);
         outstream.writeObject(new UserAction(this.clientId, Constants.EDIT, song, url));
-        checkServerStatus();
+        checkServerStatus(false);
     }
 
     public void deleteFromPlaylist(String song) throws IOException{
         localPlaylist.delete(song);
         outstream.writeObject(new UserAction(this.clientId, Constants.DELETE, song, null));
-        checkServerStatus();
+        checkServerStatus(false);
     }
 
-    public void checkServerStatus(){
+    public void checkServerStatus(boolean update){
         try {
             if(reConnected){
                 outstream.writeObject(new ServerDbStatus(sock.getLocalPort(), previousServer.getServerId(), tsLastServer));
                 ServerDbStatusResponse sdbRes = (ServerDbStatusResponse)instream.readObject();
                 if(sdbRes.updated){
-                    logger.info("Received playlist");sdbRes.playlist.printIt();
+                    logger.info("Received playlist");
+                    sdbRes.playlist.printIt();
                     localPlaylist = sdbRes.playlist;
                     reConnected = false;
                     serverUpdateStatus = true;
+                }else {
+                    logger.info(" $ Server not updated. Information may be stale");
+                }
+
+            }else if(update){
+                outstream.writeObject(new ServerDbStatus(sock.getLocalPort(), null, -1));
+                ServerDbStatusResponse sdbRes = (ServerDbStatusResponse)instream.readObject();
+                if(sdbRes.updated){
+                    logger.info("Received playlist");
+                    sdbRes.playlist.printIt();
+                    localPlaylist = sdbRes.playlist;
                 }else {
                     logger.info(" $ Server not updated. Information may be stale");
                 }
@@ -145,7 +157,7 @@ public class Client {
 
     public void printPlaylist(){
         localPlaylist.printIt();
-        checkServerStatus();
+        checkServerStatus(true);
     }
 
     public String toString(){
