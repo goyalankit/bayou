@@ -20,11 +20,17 @@ public class Playlist implements Serializable{
     }
 
     public void edit(String song, String url) {
-        collection.put(song, url);
+        if(collection.containsKey(song))
+            collection.put(song, url);
+        else
+            logger.error("Entry doesn't exist");
     }
 
     public void delete(String song){
-        collection.remove(song);
+        if(collection.containsKey(song))
+            collection.remove(song);
+        else
+            logger.error("Entry doesn't exist");
     }
 
     public void clear(){

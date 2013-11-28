@@ -1,3 +1,6 @@
 join 0
 join 1
 start client 0 1
+playlist 0 add song song.mp4
+playlist 0 delete song
+playlist 0 read
