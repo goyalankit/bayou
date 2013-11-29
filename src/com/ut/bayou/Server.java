@@ -453,30 +453,31 @@ public class Server{
     }
 
     public synchronized void reCreatePlaylist(){
-        playlist.clear();
+        synchronized (playlist){
+            playlist.clear();
 
-        Iterator<Write> it = committedWrites.iterator();
-        while(it.hasNext()){
-            Write w = it.next();
-            if(w.command.startsWith("CREATION")){
-                processCreationWrite(w);
-            }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
-                processRetirementWrite(w);
+            Iterator<Write> it = committedWrites.iterator();
+            while(it.hasNext()){
+                Write w = it.next();
+                if(w.command.startsWith("CREATION")){
+                    processCreationWrite(w);
+                }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
+                    processRetirementWrite(w);
+                }
+                processWrite(w.song, w.url, w.command);
             }
-            processWrite(w.song, w.url, w.command);
-        }
 
-        it = tentativeWrites.iterator();
-        while(it.hasNext()){
-            Write w = it.next();
-            if(w.command.startsWith("CREATION")){
-                processCreationWrite(w);
-            }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
-                processRetirementWrite(w);
+            it = tentativeWrites.iterator();
+            while(it.hasNext()){
+                Write w = it.next();
+                if(w.command.startsWith("CREATION")){
+                    processCreationWrite(w);
+                }else if(w.command.startsWith(Constants.RETIREMENTWRITE)){
+                    processRetirementWrite(w);
+                }
+                processWrite(w.song, w.url, w.command);
             }
-            processWrite(w.song, w.url, w.command);
         }
-
          canEntropy = true;
     }
 
