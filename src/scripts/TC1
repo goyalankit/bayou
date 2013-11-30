@@ -1,4 +1,12 @@
 join 0
 join 1
 join 2
-isolate 1
+start client 0 0
+retire 0
+reconnectclient 0 2
+disconnectclient 0 0
+reconnectclient 0 2
+playlist 0 add song song.mp3
+playlist 0 add sonwqg sqweqweong.mp3
+playlist 0 add sofwefwnwqg sqweqweong.mp3
+playlist 0 read

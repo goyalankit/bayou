@@ -30,13 +30,13 @@ public class Bayou {
         initializeRun(); //Method to set all the configurations for a particular run.
         if(runScript)
             try {
+                delayInterval = 1000;
                 scanner = new Scanner(new File("src/scripts/"+scriptName));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         else
             scanner = new Scanner(System.in);
-
 
         init();
     }
@@ -178,7 +178,7 @@ public class Bayou {
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             logger.error("Invalid Command");
         }
     }

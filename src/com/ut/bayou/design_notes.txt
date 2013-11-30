@@ -34,7 +34,8 @@ Only one playlist maintained at each server. need to synchronize properly in cas
 
 NEW SERVER JOIN:
 1. A new server first sends a write to one of the server(0: primary in our case). It performs an anti-antropy with the server once.
-
+2. Set the initial primary server to be 0 always!
+3. On the very start connection is with the primary only. You need to run reconnect <server_number> to connect to all other servers.
 
 
 TODO

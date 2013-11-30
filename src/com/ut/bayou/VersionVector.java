@@ -25,7 +25,7 @@ public class VersionVector implements Serializable {
     }
 
     public synchronized long getLatestStamp(ServerId sid){
-        return vector.get(sid);
+            return vector.get(sid);
     }
 
     public synchronized void remove(ServerId sid){

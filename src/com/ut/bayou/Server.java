@@ -37,7 +37,7 @@ public class Server{
 
     private boolean canEntropy;
     private HashMap<ServerId, Socket> entropiedWith;
-    private static EntropyThread entropyThread;
+    private EntropyThread entropyThread;
 
     private int newPrimary;
 
@@ -363,7 +363,6 @@ public class Server{
         String s = "";
         for(Socket sock : outstreams.keySet())
             s += " "+sock.getPort();
-
     }
 
     public synchronized void respondToEntropyRequest(Socket sock){
@@ -619,8 +618,14 @@ public class Server{
             ObjectOutputStream oout = outstreams.get(sock);
             try {
                 logger.info(this+" responding to Server Status");
-                if(versionVector.getLatestStamp(sbdStatus.lastServer) >= sbdStatus.lastAcceptedTimestamp){
+                if(versionVector.hasServerId(sbdStatus.lastServer) && versionVector.getLatestStamp(sbdStatus.lastServer) >= sbdStatus.lastAcceptedTimestamp){
                     oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                }else if(!versionVector.hasServerId(sbdStatus.lastServer)){
+                    if(seenDeadOrAlive(sbdStatus.lastServer)){
+                        oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                    }else{
+                        oout.writeObject(new ServerDbStatusResponse(serverId, false, null));
+                    }
                 }
                 else{
                     oout.writeObject(new ServerDbStatusResponse(serverId, false, null));
@@ -636,6 +641,20 @@ public class Server{
                 e.printStackTrace();
             }
         }
+    }
+
+    //Recursive call to check if i have seen the death of the servers.
+    public synchronized boolean seenDeadOrAlive(ServerId lastServer){
+        if(lastServer.iSId == null)
+            return true;
+        if(versionVector.hasServerId(lastServer.iSId) && versionVector.getLatestStamp(lastServer.iSId) > lastServer.iSTimestamp){
+            return true;
+        }else if(versionVector.hasServerId(lastServer.iSId) && versionVector.getLatestStamp(lastServer.iSId) < lastServer.iSTimestamp){
+            return false;
+        }else if(!versionVector.hasServerId(lastServer.iSId)){
+            return seenDeadOrAlive(lastServer.iSId);
+        }
+        return false;
     }
 
     public ServerId getServerId() {

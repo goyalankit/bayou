@@ -8,7 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class Client {
+public class    Client {
     private int clientId;
     private int port;
     private Socket sock;
@@ -74,8 +74,21 @@ public class Client {
             outstream = null;
             instream = null;
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
+            try {
+                sock.close();
+                if(instream!=null)
+                    instream.close();
+                if(outstream!=null)
+                    outstream.close();
+
+                sock = null;
+                instream = null;
+                outstream =null;
+
+            } catch (IOException e1) {
+                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         } catch (NullPointerException e)
         {
             System.out.println("Disconnection error in client " + clientId);
@@ -86,7 +99,7 @@ public class Client {
     {
         if(sock != null)
         {
-            System.out.println("Request failed, client already connected.");
+            System.out.println("Request failed, client already connected. Try disconnecting and reconnecting.");
         }
         else
         {
@@ -126,6 +139,12 @@ public class Client {
     public void checkServerStatus(boolean update){
         try {
             if(reConnected){
+                if(outstream == null)
+                    logger.debug("Outstream is null");
+                if(sock == null)
+                    logger.debug("Socket is null");
+                if(instream == null)
+                    logger.debug("instream is null");
                 outstream.writeObject(new ServerDbStatus(sock.getLocalPort(), previousServer.getServerId(), tsLastServer));
                 ServerDbStatusResponse sdbRes = (ServerDbStatusResponse)instream.readObject();
                 if(sdbRes.updated){

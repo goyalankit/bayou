@@ -17,3 +17,5 @@ printlog
 reconnect 1 0
 startentropy 1 0
 printlog
+startentropy 0 1
+printlog
