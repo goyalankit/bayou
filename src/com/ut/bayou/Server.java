@@ -314,12 +314,13 @@ public class Server{
 
         while (it.hasNext()){
             writeToSend = it.next();
-            if(!entRcvMsg.VV.hasServerId(writeToSend.sId) || (entRcvMsg.VV.hasServerId(writeToSend.sId) && writeToSend.acceptStamp > entRcvMsg.VV.getLatestStamp(writeToSend.sId))){
+            //Sending all the tentative writes
+            //if(!entRcvMsg.VV.hasServerId(writeToSend.sId) || (entRcvMsg.VV.hasServerId(writeToSend.sId) && writeToSend.acceptStamp > entRcvMsg.VV.getLatestStamp(writeToSend.sId))){
                 sendEntropyWrite(pout, writeToSend);
                 seqNumber++;
-            }else{
+            //}else{
 
-            }
+            //}
         }
     }
 
