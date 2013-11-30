@@ -37,6 +37,14 @@ public class Playlist implements Serializable{
         collection.clear();
     }
 
+    public Playlist giveMeACopy(){
+        Playlist copyPlaylist = new Playlist();
+        for(String song : collection.keySet())
+            copyPlaylist.add(song, collection.get(song));
+        return copyPlaylist;
+    }
+
+
     public void printIt(){
         String s = "Playlist\n------------------";
         int counter = 1;

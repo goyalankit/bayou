@@ -139,17 +139,12 @@ public class    Client {
     public void checkServerStatus(boolean update){
         try {
             if(reConnected){
-                if(outstream == null)
-                    logger.debug("Outstream is null");
-                if(sock == null)
-                    logger.debug("Socket is null");
-                if(instream == null)
-                    logger.debug("instream is null");
+
                 outstream.writeObject(new ServerDbStatus(sock.getLocalPort(), previousServer.getServerId(), tsLastServer));
                 ServerDbStatusResponse sdbRes = (ServerDbStatusResponse)instream.readObject();
                 if(sdbRes.updated){
                     logger.info("Received playlist");
-                    sdbRes.playlist.printIt();
+                    //sdbRes.playlist.printIt();
                     localPlaylist = sdbRes.playlist;
                     reConnected = false;
                     serverUpdateStatus = true;
@@ -162,7 +157,7 @@ public class    Client {
                 ServerDbStatusResponse sdbRes = (ServerDbStatusResponse)instream.readObject();
                 if(sdbRes.updated){
                     logger.info("Received playlist");
-                    sdbRes.playlist.printIt();
+                    //sdbRes.playlist.printIt();
                     localPlaylist = sdbRes.playlist;
                 }else {
                     logger.info(" $ Server not updated. Information may be stale");
@@ -175,8 +170,9 @@ public class    Client {
     }
 
     public void printPlaylist(){
-        localPlaylist.printIt();
         checkServerStatus(true);
+        localPlaylist.printIt();
+
     }
 
     public String toString(){

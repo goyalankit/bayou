@@ -619,10 +619,10 @@ public class Server{
             try {
                 logger.info(this+" responding to Server Status");
                 if(versionVector.hasServerId(sbdStatus.lastServer) && versionVector.getLatestStamp(sbdStatus.lastServer) >= sbdStatus.lastAcceptedTimestamp){
-                    oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                    oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist.giveMeACopy()));
                 }else if(!versionVector.hasServerId(sbdStatus.lastServer)){
                     if(seenDeadOrAlive(sbdStatus.lastServer)){
-                        oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                        oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist.giveMeACopy()));
                     }else{
                         oout.writeObject(new ServerDbStatusResponse(serverId, false, null));
                     }
@@ -636,7 +636,10 @@ public class Server{
         } else if(sock!=null && sbdStatus.lastAcceptedTimestamp == -1){
                 ObjectOutputStream oout = outstreams.get(sock);
             try {
-                oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist));
+                //logger.debug("Sending stuff...");
+                //playlist.printIt();
+
+                oout.writeObject(new ServerDbStatusResponse(serverId, true, playlist.giveMeACopy()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
