@@ -185,8 +185,8 @@ public class Bayou {
 
     private static void retire(String s) {
         int svrNum = Integer.parseInt(s);
-        servers.get(easyServers.get(svrNum)).retire();
-        if(easyServers.containsKey(svrNum)){
+        int canRetire = servers.get(easyServers.get(svrNum)).retire();
+        if(canRetire != -2 && easyServers.containsKey(svrNum)){
             serverport.remove(servers.remove(easyServers.remove(svrNum)));
         }
     }

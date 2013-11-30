@@ -16,8 +16,6 @@ Commands to be implemented
 10.leave(i) Node i leaves(retires from) the system.
 
 
-
-
 Entities
 --------
 Server -> equivalent to replica
@@ -35,8 +33,9 @@ Only one playlist maintained at each server. need to synchronize properly in cas
 
 
 NEW SERVER JOIN:
+1. A new server first sends a write to one of the server(0: primary in our case). It performs an anti-antropy with the server once.
 
-A new server first sends a write to one of the server(0: primary in our case). It performs an anti-antropy with the server once.
+
 
 TODO
 Retirement

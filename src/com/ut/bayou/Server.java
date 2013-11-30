@@ -352,7 +352,7 @@ public class Server{
             pout.writeObject((new RequestEntropyMessage(serverId)));
 
         }catch (SocketException ss){
-            logger.error("Socket Exception");
+            logger.debug("Socket Exception: Disconnecting...");
         }
         catch (IOException e) {
          //   e.printStackTrace();
@@ -584,6 +584,10 @@ public class Server{
     }
 
     public synchronized int retire() {
+        if(serverSockets.size() == 0){
+            logger.error("Cannot retire not connected to any server.");
+            return -2;
+        }
         this.retired = true;
 
         long acceptStamp = System.currentTimeMillis();

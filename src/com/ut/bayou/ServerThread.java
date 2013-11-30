@@ -64,7 +64,7 @@ public class ServerThread extends Thread {
                 cleanUpAfterClient();
             else
                 cleanUpAfterServer();
-            logger.error("SOCKET EXCEPTION");
+            logger.debug("Socket Exception: Disconnecting...");
         }
     }
 

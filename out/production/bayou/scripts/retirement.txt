@@ -8,6 +8,7 @@ playlist 0 add firstsong firstsong.mp3
 playlist 0 add secondsong secondsong.mp4
 reconnect 2 0
 startentropy 2 0
+printlog 0
 isolate 2
 reconnect 2 1
 playlist 0 add lastsong lastsong.mp4
@@ -16,9 +17,3 @@ printlog
 reconnect 1 0
 startentropy 1 0
 printlog
-printserverplaylist 0
-printserverplaylist 1
-startentropy 0 1
-printlog
-printserverplaylist 0
-printserverplaylist 1
