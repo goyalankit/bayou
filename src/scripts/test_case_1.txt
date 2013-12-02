@@ -1,0 +1,22 @@
+join 0
+join 1
+isolate 1
+join 2
+isolate 2
+start client 0 2
+playlist 0 add song song.mp3
+playlist 0 add hello hello.mp3
+reconnect 2 0
+startentropy 2 0
+isolate 2
+playlist 0 add last last.mp3
+reconnect 2 1
+playlist 0 add lastlast lastlast.mp3
+retire 2
+printlog
+reconnect 0 1
+startentropy 1 0
+printlog
+startentropy 0 1
+printlog
+

@@ -1,15 +1,12 @@
 join 0
 join 1
+isolate 1
 start client 0 0
-start client 1 1
 playlist 0 add song song.mp3
 playlist 1 add hello hello.mp3
-printlog
-startentropy 0 1
-startentropy 1 0
+disconnectclient 0
+reconnectclient 0 1
+playlist 0 read
 printserverplaylist 1
 printserverplaylist 0
-playlist 0 read
-playlist 1 read
-startentropy 0 1
 printlog

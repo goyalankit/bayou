@@ -1,0 +1,21 @@
+join 0
+join 1
+join 2
+isolate 2
+start client 0 0
+playlist 0 add first first.mp3
+playlist 0 add second second.mp3
+start client 1 1
+playlist 1 add first1 first1.mp3
+playlist 1 add second1 second1.mp3
+startentropy 0 1
+startentropy 1 0
+startentropy 0 1
+reconnect 2
+startentropy 0 2
+printlog
+printserverplaylist 0
+printserverplaylist 1
+printserverplaylist 2
+
+

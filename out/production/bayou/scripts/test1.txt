@@ -18,4 +18,4 @@ printconnections
 playlist 0 read
 reconnect 1
 printconnections 1
-playlist 0 read
+playlist 1 read

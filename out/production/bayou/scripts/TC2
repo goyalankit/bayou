@@ -6,3 +6,4 @@ playlist 0 read
 playlist 1 read
 playlist 0 add hello hello.mp3
 playlist 1 read
+playlist 0 read

@@ -11,3 +11,5 @@ printserverplaylist 1
 printserverplaylist 0
 playlist 0 read
 playlist 1 read
+startentropy 0 1
+printlog

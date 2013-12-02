@@ -315,13 +315,29 @@ public class Server{
         while (it.hasNext()){
             writeToSend = it.next();
             //Sending all the tentative writes
-            //if(!entRcvMsg.VV.hasServerId(writeToSend.sId) || (entRcvMsg.VV.hasServerId(writeToSend.sId) && writeToSend.acceptStamp > entRcvMsg.VV.getLatestStamp(writeToSend.sId))){
+            if((entRcvMsg.VV.hasServerId(writeToSend.sId) && writeToSend.acceptStamp > entRcvMsg.VV.getLatestStamp(writeToSend.sId))){
                 sendEntropyWrite(pout, writeToSend);
                 seqNumber++;
-            //}else{
-
-            //}
+            }else if(!entRcvMsg.VV.hasServerId(writeToSend.sId)){
+                if(!otherSeenDeadOrAlive(entRcvMsg.VV ,writeToSend.sId)){
+                    sendEntropyWrite(pout, writeToSend);
+                    seqNumber++;
+                }
+            }
         }
+    }
+
+    public synchronized boolean otherSeenDeadOrAlive(VersionVector versionVector,ServerId lastServer){
+        if(lastServer.iSId == null)
+            return true;
+        if(versionVector.hasServerId(lastServer.iSId) && versionVector.getLatestStamp(lastServer.iSId) > lastServer.iSTimestamp){
+            return true;
+        }else if(versionVector.hasServerId(lastServer.iSId) && versionVector.getLatestStamp(lastServer.iSId) < lastServer.iSTimestamp){
+            return false;
+        }else if(!versionVector.hasServerId(lastServer.iSId)){
+            return seenDeadOrAlive(lastServer.iSId);
+        }
+        return false;
     }
 
     public synchronized void sendCommitedWrites(ObjectOutputStream pout, EntropyReceiverMessage entRcvMsg){
