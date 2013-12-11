@@ -34,11 +34,11 @@ public class WriteLog {
 
     @Override
     public String toString(){
-        String s = "CSN          |AcceptStamp   | Command | Song | URL";
+        String s = "CSN          |AcceptStamp   | Command | Song | URL | ServerId";
         Iterator<Write> it = writes.iterator();
         while(it.hasNext()){
             Write w = it.next();
-            s += "\n"+ w.csn + " "+ w.acceptStamp + " " + w.command + " " + w.song + " " + w.url;
+            s += "\n"+ w.csn + " "+ w.acceptStamp + " " + w.command + " " + w.song + " " + w.url + " " + w.sId.hrNumber;
         }
         return s;
     }
